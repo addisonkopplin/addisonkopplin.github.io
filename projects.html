@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Projects — Addison Kopplin</title>
-<meta name="description" content="Engineering and code projects by Addison Kopplin: rocket roll control, solar robot electronics, PCB and Simulink research, string art, and more.">
+<meta name="description" content="Engineering and code projects by Addison Kopplin: rocket roll control, solar robot electronics, PCB and Simulink research, string art, and a fractal tree generator.">
 <meta property="og:title" content="Projects — Addison Kopplin">
-<meta property="og:description" content="Engineering and code projects by Addison Kopplin: rocket roll control, solar robot electronics, PCB and Simulink research, string art, and more.">
+<meta property="og:description" content="Engineering and code projects by Addison Kopplin: rocket roll control, solar robot electronics, PCB and Simulink research, string art, and a fractal tree generator.">
 <meta property="og:url" content="https://addisonkopplin.com/projects.html">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://addisonkopplin.com/projects.html">
@@ -73,8 +73,8 @@
           <header class="entry-head"><h3><a href="https://github.com/addisonkopplin/string_art">string_art</a></h3><p class="when">Python</p></header>
           <p>Generates images using lines. The program places 100 nails evenly around a circle over a grayscale photo, then works greedily: from the current nail it tries a straight line to every other nail, keeps the one that passes over the darkest remaining pixels, draws it, and lightens those pixels before choosing the next. It runs for up to 350 lines, tracks the error against the original image, and saves the nail sequence to <code>nail_order.npy</code>.</p>
           <figure class="plain">
-            <div class="frame"><img src="images/string-art.png" width="900" height="900" style="max-width:24rem;margin:0 auto" alt="Hundreds of straight black lines crossing a circle between evenly spaced nail points, densest around the edges where the source photo is darkest" loading="lazy"></div>
-            <figcaption>Output of string_art.py on the repo&rsquo;s einstein.jpg: 348 lines, 100 nails. Re-running the script reproduces the saved nail_order.npy exactly; line weight raised for screens. At this line count it is a coarse sketch, with thread gathered in the photo&rsquo;s dark background.</figcaption>
+            <div class="frame"><img src="images/string-art-einstein.png" width="1000" height="1000" style="max-width:30rem;margin:0 auto" alt="String art portrait of Albert Einstein sticking his tongue out, made of thousands of straight lines between nails on a circle" loading="lazy"></div>
+            <figcaption>Einstein, 1951 (photo: Arthur Sasse, public domain). 5,000 lines between 288 nails, using the same greedy line-picking approach with lines that lighten rather than erase pixels, so the thread keeps building up tone.</figcaption>
           </figure>
           <p class="links"><a href="https://github.com/addisonkopplin/string_art">Source on GitHub</a></p>
         </article>
@@ -87,15 +87,6 @@
             <figcaption>Drawn from FractalTree.py's parameters, rendered here as SVG in one color.</figcaption>
           </figure>
           <p class="links"><a href="https://github.com/addisonkopplin/fractal_tree">Source on GitHub</a></p>
-        </article>
-
-        <article class="entry" id="lumen">
-          <header class="entry-head"><h3><a href="https://addisonkopplin.github.io/grok-bot-test-project/">Lumen</a></h3><p class="when">JavaScript · WebGL</p></header>
-          <p>A self-contained particle demo that runs in the browser: a spiral of light you can pull with the cursor, reshape into disks, spheres, rings, and helices, and burst with a shockwave. No install or build step. It measures frame rate and lowers the particle count on slower machines, and falls back to a canvas renderer without WebGL. Built with an AI coding agent as a test project.</p>
-          <figure>
-            <div class="frame"><img src="images/lumen.jpg" width="1200" height="750" alt="Lumen running in a browser: a glowing spiral galaxy of particles with a small control panel" loading="lazy"></div>
-          </figure>
-          <p class="links"><a href="https://addisonkopplin.github.io/grok-bot-test-project/">Live demo</a><a href="https://github.com/addisonkopplin/grok-bot-test-project">Source on GitHub</a></p>
         </article>
       </div>
     </section>
