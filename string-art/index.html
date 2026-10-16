@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>String Art Maker · Addison Kopplin</title>
+<meta name="description" content="Turn a photo into string art in your browser. Get the nail order, a preview image, and a printable nail template.">
+<link rel="canonical" href="https://addisonkopplin.com/string-art/">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/Inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+<div class="page">
+<header class="top">
+  <p class="home"><a href="/">Addison Kopplin</a></p>
+  <h1>String Art Maker</h1>
+  <p class="lead">Turn a photo into string art: a single thread wound between nails around a circle. This tool computes the order in which to wind the thread, shows the result, and prints a nail template and the winding sequence.</p>
+  <p class="privacy">Your photo is processed in your browser and never uploaded.</p>
+</header>
+
+<main id="main">
+<div class="tool">
+  <div class="controls">
+    <section aria-labelledby="h-photo">
+      <h2 id="h-photo">Photo</h2>
+      <div class="crop" id="crop" tabindex="0" aria-label="Photo crop. Drag to move the photo. Scroll or use the zoom slider to zoom.">
+        <canvas id="crop-canvas" width="840" height="840"></canvas>
+        <p class="crop-empty" id="crop-empty">Drop a photo here</p>
+      </div>
+      <div class="row btns">
+        <label class="btn" for="file">Choose photo</label>
+        <input id="file" type="file" accept="image/*" class="vh">
+        <button class="btn" id="sample" type="button">Use sample photo</button>
+      </div>
+      <div class="field">
+        <label for="zoom">Zoom <output id="zoom-o">1.00×</output></label>
+        <input id="zoom" type="range" min="1" max="4" step="0.01" value="1">
+      </div>
+      <p class="hint">Drag the photo to position it inside the circle. Faces work best when they fill most of the circle.</p>
+      <p class="hint credit" id="credit" hidden>Sample photo: Albert Einstein by Arthur Sasse, public domain.</p>
+    </section>
+
+    <section aria-labelledby="h-set">
+      <h2 id="h-set">Settings</h2>
+      <div class="field">
+        <label for="nails">Nails <output id="nails-o">288</output></label>
+        <input id="nails" type="range" min="150" max="360" step="6" value="288">
+        <p class="hint">The number of nails around the circle. More nails give finer detail.</p>
+      </div>
+      <div class="field">
+        <label for="lines">Lines <output id="lines-o">5,000</output></label>
+        <input id="lines" type="range" min="1000" max="6000" step="100" value="5000">
+        <p class="hint">The number of straight thread segments between nails.</p>
+      </div>
+      <div class="field">
+        <label for="dark">Thread darkness <output id="dark-o">8</output></label>
+        <input id="dark" type="range" min="3" max="16" step="1" value="8">
+        <p class="hint">How much each line darkens the image. Use a higher value for thick or dark thread.</p>
+      </div>
+      <button class="btn primary" id="run" type="button" disabled>Make string art</button>
+    </section>
+  </div>
+
+  <section class="result" aria-labelledby="h-res">
+    <h2 id="h-res">Result</h2>
+    <div class="stage"><canvas id="out" width="1200" height="1200" aria-label="String art result"></canvas></div>
+    <p class="status" id="status" aria-live="polite">Choose a photo or use the sample photo, then select Make string art.</p>
+    <div class="bar" aria-hidden="true"><span id="bar"></span></div>
+    <div class="row btns">
+      <button class="btn" id="dl-png" type="button" disabled>Download image (PNG)</button>
+      <button class="btn" id="dl-txt" type="button" disabled>Download nail order (TXT)</button>
+    </div>
+  </section>
+</div>
+
+<section class="guide-opts" aria-labelledby="h-guide">
+  <h2 id="h-guide">Build guide</h2>
+  <div>
+    <p class="text">The build guide has a nail template and the winding sequence. The template shows every nail position with its number at the diameter you choose.</p>
+    <div class="opts">
+      <div class="field">
+        <label for="diam">Diameter</label>
+        <select id="diam"><option value="300">30 cm</option><option value="400" selected>40 cm</option><option value="500">50 cm</option><option value="600">60 cm</option></select>
+      </div>
+      <div class="field">
+        <label for="paper">Paper</label>
+        <select id="paper"><option value="letter">Letter</option><option value="a4">A4</option></select>
+      </div>
+      <div class="field">
+        <label for="mode">Template</label>
+        <select id="mode"><option value="tiled">Full size, tiled</option><option value="fit">Reduced, one page</option></select>
+      </div>
+    </div>
+    <button class="btn" id="print" type="button" disabled>Print build guide</button>
+    <p class="hint" id="guide-note">The guide is available once the string art is finished.</p>
+  </div>
+</section>
+
+<section aria-labelledby="h-how">
+  <h2 id="h-how">How it works</h2>
+  <div class="text">
+    <p>Nails are spaced evenly around a circle placed over the photo. The thread starts at nail 0. At each step, the program tests a straight line from the current nail to every other nail. It picks the line that crosses the darkest part of the photo, lightens those pixels in its working copy of the photo, and moves to the chosen nail. It repeats this for the chosen number of lines.</p>
+    <p>Nails are numbered from 0, counter-clockwise, starting at the 3 o’clock position. Lines between nails that are close together are skipped, so the thread does not run along the edge of the circle.</p>
+    <p>Source code: <a href="https://github.com/addisonkopplin/string_art">github.com/addisonkopplin/string_art</a></p>
+  </div>
+</section>
+</main>
+</div>
+</div>
+<div id="guide" class="guide" aria-hidden="true"></div>
+<script src="app.js"></script>
+</body>
+</html>
