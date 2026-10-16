@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects — Addison Kopplin</title>
+<meta name="description" content="Engineering and code projects by Addison Kopplin: rocket roll control, solar robot electronics, PCB and Simulink research, string art, and more.">
+<meta property="og:title" content="Projects — Addison Kopplin">
+<meta property="og:description" content="Engineering and code projects by Addison Kopplin: rocket roll control, solar robot electronics, PCB and Simulink research, string art, and more.">
+<meta property="og:url" content="https://addisonkopplin.com/projects.html">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://addisonkopplin.com/projects.html">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/source-serif-4-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="page">
+  <nav class="site-nav" aria-label="Site">
+    <a class="home" href="index.html">Addison Kopplin</a>
+    <ul><li><a href="index.html">Home</a></li><li><a href="projects.html" aria-current="page">Projects</a></li><li><a href="resume.html">Résumé</a></li></ul>
+  </nav>
+  <header class="masthead">
+    <h1>Projects</h1>
+    <p class="title">Hardware from competition teams and research, plus a few small programs.</p>
+  </header>
+
+  <main id="main">
+    <section class="block" aria-labelledby="h-eng">
+      <h2 id="h-eng">Engineering</h2>
+      <div class="body">
+        <article class="entry" id="rocket">
+          <header class="entry-head"><h3>Active roll control for a high-power rocket</h3><p class="when">2020 – 2022</p></header>
+          <p class="role">Team Lead · Rocket Design Competition, Wisconsin Space Grant Consortium</p>
+          <ul>
+          <li>Led design and fabrication of a high-power rocket for the Wisconsin Space Grant Consortium competition</li>
+          <li>Designed an active roll control system using a reaction wheel and PID controller</li>
+          <li>Simulated flight dynamics and analyzed flight data to drive design decisions</li>
+          <li>Produced technical documentation and engineering reports</li>
+          </ul>
+        </article>
+
+        <article class="entry" id="asme-robot">
+          <header class="entry-head"><h3>Electronics for a solar-powered robot</h3><p class="when">2022 – 2023</p></header>
+          <p class="role">Controls &amp; Electronics Engineer · ASME Design Competition</p>
+          <ul>
+          <li>Designed and built the complete electronics system for a solar-powered robot on a 5-person engineering team</li>
+          <li>Designed power and switching circuitry (voltage regulation, capacitor bank, MOSFETs, relays) to drive motors and actuators</li>
+          <li>Implemented embedded control on an Arduino Nano with an integrated Bluetooth module for remote control</li>
+          <li>Integrated and controlled an electromagnet for payload handling</li>
+          <li>Hand-assembled and soldered all electronics on a prototyping board; supported system-level debugging and testing</li>
+          </ul>
+        </article>
+
+        <article class="entry" id="msoe-research">
+          <header class="entry-head"><h3>PCB, Simulink, and vision research</h3><p class="when">2022 – 2023</p></header>
+          <p class="role">Undergraduate Research Assistant · Milwaukee School of Engineering</p>
+          <ul>
+          <li>Designed, assembled, and soldered a PCB that replaced a prototype breadboard-based system</li>
+          <li>Tuned Simulink models and validated controller performance using collected accelerometer and encoder data</li>
+          <li>Developed Simulink environments to streamline control, simulation, and system monitoring</li>
+          <li>Implemented a vision-based pick-and-place task, using a webcam to detect and sort objects by color</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="h-code">
+      <h2 id="h-code">Code</h2>
+      <div class="body">
+        <article class="entry" id="string-art">
+          <header class="entry-head"><h3><a href="https://github.com/addisonkopplin/string_art">string_art</a></h3><p class="when">Python</p></header>
+          <p>Generates images using lines. The program places 100 nails evenly around a circle over a grayscale photo, then works greedily: from the current nail it tries a straight line to every other nail, keeps the one that passes over the darkest remaining pixels, draws it, and lightens those pixels before choosing the next. It runs for up to 350 lines, tracks the error against the original image, and saves the nail sequence to <code>nail_order.npy</code>.</p>
+          <figure class="plain">
+            <div class="frame"><img src="images/string-art.png" width="900" height="900" style="max-width:24rem;margin:0 auto" alt="Hundreds of straight black lines crossing a circle between evenly spaced nail points, densest around the edges where the source photo is darkest" loading="lazy"></div>
+            <figcaption>Output of string_art.py on the repo&rsquo;s einstein.jpg: 348 lines, 100 nails. Re-running the script reproduces the saved nail_order.npy exactly; line weight raised for screens. At this line count it is a coarse sketch, with thread gathered in the photo&rsquo;s dark background.</figcaption>
+          </figure>
+          <p class="links"><a href="https://github.com/addisonkopplin/string_art">Source on GitHub</a></p>
+        </article>
+
+        <article class="entry" id="fractal-tree">
+          <header class="entry-head"><h3><a href="https://github.com/addisonkopplin/fractal_tree">fractal_tree</a></h3><p class="when">Python</p></header>
+          <p>A recursive fractal tree generator. Starting from a single trunk, every branch splits into two children at ±30°, each 0.67 times the length of its parent, for 10 levels (1,023 segments in all).</p>
+          <figure class="plain">
+            <div class="frame"><img src="images/fractal-tree.svg" width="654" height="603" alt="A symmetric fractal tree whose branches split in two at each of ten levels" loading="lazy" style="max-width:20rem;margin:0 auto"></div>
+            <figcaption>Drawn from FractalTree.py's parameters, rendered here as SVG in one color.</figcaption>
+          </figure>
+          <p class="links"><a href="https://github.com/addisonkopplin/fractal_tree">Source on GitHub</a></p>
+        </article>
+
+        <article class="entry" id="lumen">
+          <header class="entry-head"><h3><a href="https://addisonkopplin.github.io/grok-bot-test-project/">Lumen</a></h3><p class="when">JavaScript · WebGL</p></header>
+          <p>A self-contained particle demo that runs in the browser: a spiral of light you can pull with the cursor, reshape into disks, spheres, rings, and helices, and burst with a shockwave. No install or build step. It measures frame rate and lowers the particle count on slower machines, and falls back to a canvas renderer without WebGL. Built with an AI coding agent as a test project.</p>
+          <figure>
+            <div class="frame"><img src="images/lumen.jpg" width="1200" height="750" alt="Lumen running in a browser: a glowing spiral galaxy of particles with a small control panel" loading="lazy"></div>
+          </figure>
+          <p class="links"><a href="https://addisonkopplin.github.io/grok-bot-test-project/">Live demo</a><a href="https://github.com/addisonkopplin/grok-bot-test-project">Source on GitHub</a></p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <span>addisonkopplin.com</span>
+    <span><a href="mailto:addisonkopplin@gmail.com">Email</a> · <a href="https://www.linkedin.com/in/addisonkopplin">LinkedIn</a> · <a href="https://github.com/addisonkopplin">GitHub</a></span>
+  </footer>
+</div>
+</body>
+</html>
