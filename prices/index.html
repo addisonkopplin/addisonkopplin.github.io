@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prices vs. Inflation Calculator by Category | String &amp; Pendulum</title>
+<meta name="description" content="Free inflation calculator by category: see how prices for rent, groceries, auto repair, childcare and 28 more have changed since any year, with BLS data.">
+<link rel="canonical" href="https://addisonkopplin.com/prices/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="String &amp; Pendulum">
+<meta property="og:title" content="Prices vs. Inflation Calculator by Category">
+<meta property="og:description" content="Free inflation calculator by category: see how prices for rent, groceries, auto repair, childcare and 28 more have changed since any year, with BLS data.">
+<meta property="og:url" content="https://addisonkopplin.com/prices/">
+<meta property="og:image" content="https://addisonkopplin.com/images/og-prices.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Prices vs. Inflation: line chart of auto repair prices up 57% since September 2019, against 31% for overall prices">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prices vs. Inflation Calculator by Category">
+<meta name="twitter:description" content="Free inflation calculator by category: see how prices for rent, groceries, auto repair, childcare and 28 more have changed since any year, with BLS data.">
+<meta name="twitter:image" content="https://addisonkopplin.com/images/og-prices.png">
+<meta name="twitter:image:alt" content="Prices vs. Inflation: line chart of auto repair prices up 57% since September 2019, against 31% for overall prices">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/Inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "WebApplication",
+ "name": "Prices vs. Inflation",
+ "url": "https://addisonkopplin.com/prices/",
+ "description": "Free inflation calculator by category: see how prices for rent, groceries, auto repair, childcare and 28 more have changed since any year, with BLS data.",
+ "image": "https://addisonkopplin.com/images/og-prices.png",
+ "applicationCategory": "FinanceApplication",
+ "operatingSystem": "Any (web browser)",
+ "isAccessibleForFree": true,
+ "offers": {
+  "@type": "Offer",
+  "price": "0",
+  "priceCurrency": "USD"
+ },
+ "publisher": {
+  "@type": "Organization",
+  "name": "String & Pendulum",
+  "url": "https://addisonkopplin.com/"
+ }
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+<div class="page">
+<header class="top">
+  <nav class="nav" aria-label="Site"><a class="home" href="/">String &amp; Pendulum</a><span><a href="/string-art/">String Art Maker</a><a href="/harmonograph/">Harmonograph</a><a href="/spirograph/">Spirograph</a><a href="/prices/" aria-current="page">Prices</a><a href="/shop/">Shop</a></span></nav>
+  <h1>Prices vs. Inflation</h1>
+  <p class="lead">Pick something you pay for and a starting year. The chart shows how much its price has changed since then, next to the change in overall prices. The figures are official price indexes from the U.S. Bureau of Labor Statistics.</p>
+</header>
+
+<main id="main">
+<div class="tool">
+  <section class="result" aria-labelledby="h-chart">
+    <h2 id="h-chart">Change since <span id="since">…</span></h2>
+    <p class="summary" id="summary" aria-live="polite">Loading data…</p>
+    <figure class="chart">
+      <div class="stage" id="stage"><svg id="chart" role="img" aria-labelledby="chart-desc"><desc id="chart-desc">Price change chart</desc></svg></div>
+      <figcaption class="legend"><span class="key cat"><i aria-hidden="true"></i><span id="key-cat">Category</span></span><span class="key all"><i aria-hidden="true"></i>Overall prices (CPI-U, all items)</span></figcaption>
+    </figure>
+    <dl class="meta" id="meta"></dl>
+    <p class="note" id="gapnote" hidden></p>
+    <div class="row btns">
+      <button class="btn" id="copy" type="button">Copy link</button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+  </section>
+
+  <div class="controls">
+    <section aria-labelledby="h-pick">
+      <h2 id="h-pick">Compare</h2>
+      <div class="field"><label for="cat">Category</label>
+        <select id="cat"></select></div>
+      <div class="field"><label for="year">Since</label>
+        <select id="year"></select>
+        <p class="hint" id="year-hint">Compares the latest month with the same month of the year you pick.</p></div>
+    </section>
+  </div>
+</div>
+
+<section class="rank" aria-labelledby="h-rank">
+  <h2 id="h-rank">All categories since <span id="since2">…</span></h2>
+  <div class="tablewrap">
+    <table id="ranktable">
+      <caption class="sr">Price change for every category, largest first. Select a name to chart it.</caption>
+      <thead><tr><th scope="col">Category</th><th scope="col" class="num">Change</th><th scope="col" class="num">Vs. overall prices</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="how" aria-labelledby="h-how">
+  <h2 id="h-how">How it works</h2>
+  <div class="text">
+    <p>Each category is a price index: a number that tracks what the same basket of goods or services costs over time. A change from 100 to 146 means prices rose 46%.</p>
+    <p>The page compares the latest month with the same month in the year you choose, so seasonal swings, such as summer gasoline prices, cancel out. Overall prices are the Consumer Price Index for All Urban Consumers (CPI-U), all items. The difference between the two changes is given in percentage points.</p>
+    <p>Most categories come from the Consumer Price Index and measure what households pay. The contractor categories are <strong>producer prices</strong>: what contractors charge for work on nonresidential buildings. They are the closest official measure of trade prices, but they are not household repair bills.</p>
+    <p>The indexes are not seasonally adjusted. BLS collected no prices for October 2025 because of the federal government shutdown, so that month is missing and the chart line breaks there. Recent producer price values are preliminary and may be revised.</p>
+    <p>The data is stored with the page and updated by hand from the BLS. Nothing you select is sent anywhere.</p>
+  </div>
+</section>
+</main>
+</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
