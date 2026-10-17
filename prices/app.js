@@ -12,12 +12,15 @@
     'beef': 'Beef prices', 'dairy': 'Dairy prices', 'coffee': 'Coffee prices',
     'physicians': "Prices for physicians' services", 'hospital': 'Prices for hospital services',
     'prescriptions': 'Prescription drug prices', 'childcare': 'Day care and preschool prices', 'vet': 'Vet prices',
-    'pet-services': 'Pet service prices, including vet care,', 'airfare': 'Airline fares',
+    'pet-services': 'Pet service prices (excluding vet care)', 'airfare': 'Airline fares',
     'personal-care': 'Prices for haircuts and other personal care', 'tuition': 'College tuition and fees',
     'internet': 'Internet service prices', 'wireless': 'Cell phone service prices',
     'roofing': 'Producer prices for roofing work', 'plumbing-hvac': 'Producer prices for plumbing and HVAC work',
     'electrical': 'Producer prices for electrical work', 'foundation': 'Producer prices for foundation, structure and exterior work'
   };
+  // Every PHRASE above is a plural subject ("... prices are", "Rents are"). List any singular
+  // subject here (e.g. a future 'tuition': 'Tuition') so the sentence uses "is ... it".
+  var SINGULAR = {};
   var $ = function (id) { return document.getElementById(id); };
   var D, byKey = {}, startY, startM, nMonths, base;
   var state = { c: 'auto-repair', y: 2019 };
@@ -61,13 +64,14 @@
     var b = ym(r.baseI), when = monthName(b.y, b.m);
     var phrase = PHRASE[s.key] || (s.label + ' prices');
     var c = Math.round(r.cat), a = Math.round(r.all), d = Math.round(r.diff);
-    var first = c === 0 ? phrase + ' are about the same as in ' + when + '; '
-      : phrase + ' are ' + Math.abs(c) + '% ' + (c > 0 ? 'higher' : 'lower') + ' than in ' + when + '; ';
+    var one = !!SINGULAR[s.key], be = one ? ' is ' : ' are ', pro = one ? 'it' : 'they';
+    var first = c === 0 ? phrase + be + 'about the same as in ' + when + '; '
+      : phrase + be + Math.abs(c) + '% ' + (c > 0 ? 'higher' : 'lower') + ' than in ' + when + '; ';
     var second = 'overall prices ' + (a >= 0 ? 'rose ' + a + '%' : 'fell ' + Math.abs(a) + '%');
     var third;
-    if (Math.abs(r.diff) < 1) third = ', so it kept pace with inflation.';
-    else if (d > 0) third = ', so it outpaced inflation by about ' + d + ' point' + (d === 1 ? '' : 's') + '.';
-    else third = ', so it trailed inflation by about ' + Math.abs(d) + ' point' + (d === -1 ? '' : 's') + '.';
+    if (Math.abs(r.diff) < 1) third = ', so ' + pro + ' kept pace with inflation.';
+    else if (d > 0) third = ', so ' + pro + ' outpaced inflation by about ' + d + ' point' + (d === 1 ? '' : 's') + '.';
+    else third = ', so ' + pro + ' trailed inflation by about ' + Math.abs(d) + ' point' + (d === -1 ? '' : 's') + '.';
     return first + second + third;
   }
 
