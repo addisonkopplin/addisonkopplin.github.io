@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Harmonograph Simulator: Draw Pendulum Art Online | String &amp; Pendulum</title>
+<title>Harmonograph Simulator: Draw Pendulum Art Online | Workbench</title>
 <meta name="description" content="Free harmonograph simulator: set the frequency, phase, amplitude and damping of up to three pendulums, then download the drawing as SVG or PNG.">
 <link rel="canonical" href="https://addisonkopplin.com/harmonograph/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="String &amp; Pendulum">
+<meta property="og:site_name" content="Workbench">
 <meta property="og:title" content="Harmonograph Simulator: Draw Pendulum Art Online">
 <meta property="og:description" content="Free harmonograph simulator: set the frequency, phase, amplitude and damping of up to three pendulums, then download the drawing as SVG or PNG.">
 <meta property="og:url" content="https://addisonkopplin.com/harmonograph/">
@@ -23,9 +23,12 @@
 <meta name="twitter:image:alt" content="Harmonograph Maker: fine black curves traced by two pendulums with frequency ratio 2 : 3, forming overlapping loops">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fonts/Inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="/site.css">
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -44,21 +47,35 @@
  },
  "publisher": {
   "@type": "Organization",
-  "name": "String & Pendulum",
+  "name": "Workbench",
   "url": "https://addisonkopplin.com/"
  }
 }
 </script>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
+<!-- nav:start -->
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="site-bar">
+<a class="site-name" href="/">Workbench</a>
+<nav class="site-nav" aria-label="Main">
+<ul>
+<li><a href="/string-art/">String Art</a></li>
+<li><a href="/harmonograph/" aria-current="page">Harmonograph</a></li>
+<li><a href="/spirograph/">Spirograph</a></li>
+<li><a href="/prices/">Prices</a></li>
+</ul>
+</nav>
+</div>
+</header>
+<!-- nav:end -->
 <div class="app">
 <div class="page">
-<header class="top">
-  <nav class="nav" aria-label="Site"><a class="home" href="/">String &amp; Pendulum</a><span><a href="/string-art/">String Art Maker</a><a href="/harmonograph/" aria-current="page">Harmonograph</a><a href="/spirograph/">Spirograph</a><a href="/prices/">Prices</a><a href="/shop/">Shop</a></span></nav>
+<div class="top">
   <h1>Harmonograph Maker</h1>
   <p class="lead">A harmonograph is a machine that draws with pendulums. This page simulates one: set how each pendulum swings, and the pen traces the resulting curve. Download the drawing as SVG for a pen plotter or laser cutter, or as PNG.</p>
-</header>
+</div>
 
 <main id="main">
 <div class="tool">
@@ -118,6 +135,22 @@
 </main>
 </div>
 </div>
+<!-- footer:start -->
+<footer class="site-footer">
+<div class="site-bar">
+<a class="site-name" href="/">Workbench</a>
+<nav class="foot-nav" aria-label="Footer">
+<ul>
+<li><a href="/string-art/">String Art</a></li>
+<li><a href="/harmonograph/" aria-current="page">Harmonograph</a></li>
+<li><a href="/spirograph/">Spirograph</a></li>
+<li><a href="/prices/">Prices</a></li>
+<li><a href="/shop/">Shop</a></li>
+</ul>
+</nav>
+</div>
+</footer>
+<!-- footer:end -->
 <div id="printout" class="printout" aria-hidden="true"></div>
 <script src="app.js"></script>
 </body>
