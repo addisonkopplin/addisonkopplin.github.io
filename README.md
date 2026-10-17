@@ -1,6 +1,6 @@
 # String & Pendulum
 
-Free browser tools for making line art from thread and pendulums, a chart of prices against inflation, and a shop for custom string art guides. Served at the domain in `CNAME`.
+Free browser tools for string art, harmonograph and spirograph drawings, a prices vs. inflation calculator, and a shop for custom string art guides. Served at the domain in `CNAME`.
 
 The site is static and served by GitHub Pages. It makes no third-party requests.
 
