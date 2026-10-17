@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Harmonograph Maker · Addison Kopplin</title>
+<meta name="description" content="Draw harmonograph figures in your browser: curves traced by swinging pendulums. Download them as SVG or PNG, or share a link.">
+<link rel="canonical" href="https://addisonkopplin.com/harmonograph/">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/Inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+<div class="page">
+<header class="top">
+  <nav class="nav" aria-label="Site"><a class="home" href="/">Addison Kopplin</a><span><a href="/string-art/">String Art Maker</a><a href="/harmonograph/" aria-current="page">Harmonograph</a><a href="/shop/">Shop</a></span></nav>
+  <h1>Harmonograph Maker</h1>
+  <p class="lead">A harmonograph is a machine that draws with pendulums. This page simulates one: set how each pendulum swings, and the pen traces the resulting curve. Download the drawing as SVG for a pen plotter or laser cutter, or as PNG.</p>
+</header>
+
+<main id="main">
+<div class="tool">
+  <section class="result" aria-labelledby="h-draw">
+    <h2 id="h-draw">Drawing</h2>
+    <div class="stage"><canvas id="out" width="1200" height="1200" role="img" aria-label="Harmonograph drawing"></canvas></div>
+    <div class="row btns">
+      <button class="btn primary" id="play" type="button">Draw again</button>
+      <button class="btn" id="random" type="button">Randomize</button>
+    </div>
+    <div class="row btns">
+      <button class="btn" id="dl-svg" type="button">Download SVG</button>
+      <button class="btn" id="dl-png" type="button">Download PNG</button>
+      <button class="btn" id="copy" type="button">Copy link</button>
+      <button class="btn" id="print" type="button">Print</button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+  </section>
+
+  <div class="controls">
+    <section aria-labelledby="h-pre">
+      <h2 id="h-pre">Presets</h2>
+      <div class="field"><label for="preset">Start from</label>
+        <select id="preset"><option value="">Choose a preset</option></select></div>
+    </section>
+    <section aria-labelledby="h-pen">
+      <h2 id="h-pen">Pendulums</h2>
+      <div class="check"><input id="snap" type="checkbox"><label for="snap">Snap frequencies to whole numbers</label></div>
+      <div class="field" id="det-field"><label for="det">Detune <output id="det-o"></output></label>
+        <input id="det" type="range" min="0" max="0.03" step="0.0005">
+        <p class="hint">Adds this amount to the frequency of pendulum 2 and subtracts it from pendulum 3. Small values make each loop shift slightly.</p></div>
+      <div id="pends"></div>
+      <div class="check"><input id="table" type="checkbox"><label for="table">Use pendulum 3, which swings the paper table in a circle</label></div>
+    </section>
+    <section aria-labelledby="h-line">
+      <h2 id="h-line">Line</h2>
+      <div class="field"><label for="T">Duration <output id="T-o"></output></label>
+        <input id="T" type="range" min="10" max="600" step="5">
+        <p class="hint">How many seconds of swinging the pen records.</p></div>
+      <div class="field"><label for="w">Line weight <output id="w-o"></output></label>
+        <input id="w" type="range" min="0.2" max="3" step="0.1"></div>
+    </section>
+  </div>
+</div>
+
+<section class="how" aria-labelledby="h-how">
+  <h2 id="h-how">How it works</h2>
+  <div class="text">
+    <p>Pendulum 1 moves the pen left and right. Pendulum 2 moves it forward and back. Pendulum 3, when used, swings the paper table in a circle. Each swing follows a sine wave that slowly dies out. The drawing is the path of the pen across the paper:</p>
+    <p class="eq"><var>x</var>(<var>t</var>) = <var>A</var><sub>1</sub> sin(2π<var>f</var><sub>1</sub><var>t</var> + <var>p</var><sub>1</sub>) e<sup>−<var>d</var><sub>1</sub><var>t</var></sup> + <var>A</var><sub>3</sub> sin(2π<var>f</var><sub>3</sub><var>t</var> + <var>p</var><sub>3</sub>) e<sup>−<var>d</var><sub>3</sub><var>t</var></sup></p>
+    <p class="eq"><var>y</var>(<var>t</var>) = <var>A</var><sub>2</sub> sin(2π<var>f</var><sub>2</sub><var>t</var> + <var>p</var><sub>2</sub>) e<sup>−<var>d</var><sub>2</sub><var>t</var></sup> + <var>A</var><sub>3</sub> cos(2π<var>f</var><sub>3</sub><var>t</var> + <var>p</var><sub>3</sub>) e<sup>−<var>d</var><sub>3</sub><var>t</var></sup></p>
+    <p>For each pendulum, <var>A</var> is the amplitude (how far it swings), <var>f</var> is the frequency (swings per second), <var>p</var> is the phase (where in its swing it starts), and <var>d</var> is the damping (how quickly the swing dies out). <var>t</var> is time in seconds. Without pendulum 3, the second term of each line is zero.</p>
+    <p>When two frequencies form a whole-number ratio, such as 2 : 3, the curve repeats the same loops. A slightly different ratio makes each loop shift a little, which builds up layered bands. Damping makes the loops shrink toward the centre.</p>
+    <p>The current settings are stored in the page address, so a copied link reopens the same drawing.</p>
+  </div>
+</section>
+</main>
+</div>
+</div>
+<div id="printout" class="printout" aria-hidden="true"></div>
+<script src="app.js"></script>
+</body>
+</html>
