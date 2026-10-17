@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spirograph Maker · String &amp; Pendulum</title>
+<meta name="description" content="Draw spirograph curves and Lissajous figures in your browser. Download them as SVG for a pen plotter or as PNG, or share a link.">
+<meta property="og:title" content="Spirograph Maker · String &amp; Pendulum">
+<meta property="og:description" content="Draw spirograph curves and Lissajous figures in your browser. Download them as SVG for a pen plotter or as PNG, or share a link.">
+<meta property="og:url" content="https://addisonkopplin.com/spirograph/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="String &amp; Pendulum">
+<link rel="canonical" href="https://addisonkopplin.com/spirograph/">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/Inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+<div class="page">
+<header class="top">
+  <nav class="nav" aria-label="Site"><a class="home" href="/">String &amp; Pendulum</a><span><a href="/string-art/">String Art Maker</a><a href="/harmonograph/">Harmonograph</a><a href="/spirograph/" aria-current="page">Spirograph</a><a href="/shop/">Shop</a></span></nav>
+  <h1>Spirograph Maker</h1>
+  <p class="lead">A spirograph draws with a pen held in a small wheel that rolls around inside or outside a fixed ring. This page computes those curves, and Lissajous figures, which combine two perpendicular sine waves. Download the drawing as SVG for a pen plotter or laser cutter, or as PNG.</p>
+</header>
+
+<main id="main">
+<div class="tool">
+  <section class="result" aria-labelledby="h-draw">
+    <h2 id="h-draw">Drawing</h2>
+    <div class="stage"><canvas id="out" width="1200" height="1200" role="img" aria-label="Spirograph drawing"></canvas></div>
+    <div class="row btns">
+      <button class="btn primary" id="play" type="button">Draw again</button>
+      <button class="btn" id="random" type="button">Randomize</button>
+    </div>
+    <div class="row btns">
+      <button class="btn" id="dl-svg" type="button">Download SVG</button>
+      <button class="btn" id="dl-png" type="button">Download PNG</button>
+      <button class="btn" id="copy" type="button">Copy link</button>
+      <button class="btn" id="print" type="button">Print</button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+  </section>
+
+  <div class="controls">
+    <section aria-labelledby="h-pre">
+      <h2 id="h-pre">Presets</h2>
+      <div class="field"><label for="preset">Start from</label>
+        <select id="preset"><option value="">Choose a preset</option></select></div>
+    </section>
+    <section aria-labelledby="h-curve">
+      <h2 id="h-curve">Curve</h2>
+      <div class="field"><label for="mode">Type</label>
+        <select id="mode">
+          <option value="hypo">Hypotrochoid: wheel rolls inside the ring</option>
+          <option value="epi">Epitrochoid: wheel rolls outside the ring</option>
+          <option value="liss">Lissajous figure</option>
+        </select></div>
+      <div id="spiro-fields">
+        <div class="field"><label for="R">Ring radius <output id="R-o"></output></label>
+          <input id="R" type="range" min="10" max="150" step="1"></div>
+        <div class="field"><label for="r">Wheel radius <output id="r-o"></output></label>
+          <input id="r" type="range" min="1" max="150" step="1"></div>
+        <div class="field"><label for="d">Pen distance from wheel center <output id="d-o"></output></label>
+          <input id="d" type="range" min="0" max="150" step="1">
+          <p class="hint">Inside the wheel when smaller than the wheel radius, outside it when larger.</p></div>
+      </div>
+      <div id="liss-fields">
+        <div class="field"><label for="a">Horizontal frequency <output id="a-o"></output></label>
+          <input id="a" type="range" min="1" max="15" step="1"></div>
+        <div class="field"><label for="b">Vertical frequency <output id="b-o"></output></label>
+          <input id="b" type="range" min="1" max="15" step="1"></div>
+        <div class="field"><label for="ph">Phase <output id="ph-o"></output></label>
+          <input id="ph" type="range" min="0" max="180" step="1">
+          <p class="hint">How far ahead the horizontal wave starts.</p></div>
+        <div class="field"><label for="q">Height to width <output id="q-o"></output></label>
+          <input id="q" type="range" min="0.25" max="2" step="0.05"></div>
+        <div class="field"><label for="k">Damping <output id="k-o"></output></label>
+          <input id="k" type="range" min="0" max="10" step="0.1">
+          <p class="hint">How much the figure shrinks on each turn. A damped figure never closes, so its length is set by Turns.</p></div>
+      </div>
+    </section>
+    <section aria-labelledby="h-line">
+      <h2 id="h-line">Line</h2>
+      <div class="check"><input id="auto" type="checkbox"><label for="auto">Stop when the curve closes</label></div>
+      <div class="field" id="n-field"><label for="n">Turns <output id="n-o"></output></label>
+        <input id="n" type="range" min="1" max="100" step="1">
+        <p class="hint" id="n-hint">One turn is one trip of the wheel around the ring.</p></div>
+      <div class="field"><label for="w">Line weight <output id="w-o"></output></label>
+        <input id="w" type="range" min="0.2" max="3" step="0.1"></div>
+      <div class="field"><label for="c">Line color <output id="c-o"></output></label>
+        <div class="colorrow"><input id="c" type="color" value="#111111"><button class="btn" id="c-ink" type="button">Black</button><button class="btn" id="c-acc" type="button">Blue</button></div></div>
+    </section>
+  </div>
+</div>
+
+<section class="how" aria-labelledby="h-how">
+  <h2 id="h-how">How it works</h2>
+  <div class="text">
+    <p>In a hypotrochoid, a wheel of radius <var>r</var> rolls inside a fixed ring of radius <var>R</var>, and the pen sits at distance <var>d</var> from the wheel’s center:</p>
+    <p class="eq"><var>x</var>(<var>t</var>) = (<var>R</var> − <var>r</var>) cos <var>t</var> + <var>d</var> cos((<var>R</var> − <var>r</var>)<var>t</var> / <var>r</var>)</p>
+    <p class="eq"><var>y</var>(<var>t</var>) = (<var>R</var> − <var>r</var>) sin <var>t</var> − <var>d</var> sin((<var>R</var> − <var>r</var>)<var>t</var> / <var>r</var>)</p>
+    <p>In an epitrochoid, the wheel rolls around the outside of the ring:</p>
+    <p class="eq"><var>x</var>(<var>t</var>) = (<var>R</var> + <var>r</var>) cos <var>t</var> − <var>d</var> cos((<var>R</var> + <var>r</var>)<var>t</var> / <var>r</var>)</p>
+    <p class="eq"><var>y</var>(<var>t</var>) = (<var>R</var> + <var>r</var>) sin <var>t</var> − <var>d</var> sin((<var>R</var> + <var>r</var>)<var>t</var> / <var>r</var>)</p>
+    <p><var>t</var> is the angle of the wheel’s center around the ring; one turn is 2π. With whole-number radii, the curve closes after <var>r</var> / gcd(<var>R</var>, <var>r</var>) turns and has <var>R</var> / gcd(<var>R</var>, <var>r</var>) loops, where gcd is the greatest common divisor.</p>
+    <p>A Lissajous figure combines a horizontal and a vertical sine wave:</p>
+    <p class="eq"><var>x</var>(<var>t</var>) = sin(<var>a</var><var>t</var> + <var>δ</var>) · <var>s</var><sup><var>t</var> / 2π</sup>, &nbsp; <var>y</var>(<var>t</var>) = <var>h</var> sin(<var>b</var><var>t</var>) · <var>s</var><sup><var>t</var> / 2π</sup></p>
+    <p><var>a</var> and <var>b</var> are the frequencies, <var>δ</var> is the phase, <var>h</var> is the height to width ratio, and <var>s</var> is the fraction of size kept after each turn. Without damping (<var>s</var> = 1), the figure closes after one turn.</p>
+    <p>The current settings are stored in the page address, so a copied link reopens the same drawing.</p>
+  </div>
+</section>
+</main>
+</div>
+</div>
+<div id="printout" class="printout" aria-hidden="true"></div>
+<script src="app.js"></script>
+</body>
+</html>
