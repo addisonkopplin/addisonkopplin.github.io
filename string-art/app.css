@@ -128,5 +128,6 @@ input[type=number]{display:block;width:100%;margin-top:.35rem;min-height:2.5rem;
  .cols .n{font-weight:600}
  .gnote{color:#555;font-size:8.5pt}
  .gsw{display:inline-block;width:3mm;height:3mm;border:0.2mm solid #888;margin-right:1.5mm;vertical-align:-0.3mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
- .cols .hund{border-top:0.3mm solid #000;margin-top:1mm;padding-top:.6mm}
+ .cols .turn{display:block;font-weight:700;border-top:0.3mm solid #000;margin-top:1mm;padding-top:.6mm;white-space:nowrap}
+.cols .hund{border-top:0.3mm solid #000;margin-top:1mm;padding-top:.6mm}
 }

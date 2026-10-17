@@ -115,7 +115,7 @@
       <div class="auto">
         <button class="btn wide" id="auto" type="button" disabled>Find best settings</button>
         <label class="check"><input type="checkbox" id="auto-colors" checked> Include thread colors and board</label>
-        <p class="hint">Tests nail counts, line counts, thread strengths and colors on this photo and frame, sets the controls to the best match and makes the string art. Takes a few seconds.</p>
+        <p class="hint">Tests nail counts, line counts and colors on this photo and frame, sets the controls to the best match and makes the string art. Takes a few seconds.</p>
       </div>
       <div class="field">
         <label for="nails">Nails <output id="nails-o">288</output></label>
@@ -125,12 +125,7 @@
       <div class="field">
         <label for="lines">Lines <output id="lines-o">1,500</output></label>
         <input id="lines" type="range" min="200" max="6000" step="100" value="1500">
-        <p class="hint">Straight segments between nails, all threads together. <span id="suggest"></span></p>
-      </div>
-      <div class="field">
-        <label for="dark">Thread strength <output id="dark-o">24</output></label>
-        <input id="dark" type="range" min="3" max="60" step="1" value="24">
-        <p class="hint">How much each line lowers the need for thread under it. Higher gives fewer, more spread-out lines.</p>
+        <p class="hint">The most straight segments between nails, all threads together. It stops sooner if no line brings the image closer to the photo. <span id="suggest"></span></p>
       </div>
       <label class="check"><input type="checkbox" id="animate" checked> Show lines as they are drawn</label>
       <button class="btn primary" id="run" type="button" disabled>Make string art</button>
@@ -154,7 +149,7 @@
 <section class="guide-opts" aria-labelledby="h-guide">
   <h2 id="h-guide">Build guide</h2>
   <div>
-    <p class="text">A nail template at the frame size, the shopping list and the winding sequence for each thread.</p>
+    <p class="text">A nail template at the frame size, the shopping list and the winding sequence, step by step.</p>
     <div class="opts">
       <div class="field">
         <label for="paper">Paper</label>
@@ -173,9 +168,9 @@
 <section aria-labelledby="h-how">
   <h2 id="h-how">How it works</h2>
   <div class="text">
-    <p>Nail 0 is at the middle of the right side; numbers increase counter-clockwise. From the current nail, the program takes the line that crosses the most area still needing thread, then lowers that need under it. With one thread, it stops when no line brings the image closer to the photo. Each nail pair is used once per thread.</p>
-    <p>With several threads, each area gets the thread mix over the board color closest to the photo, and lines are shared by how much each thread covers. A thread with under 3% of the lines is removed.</p>
-    <p>The preview draws each line at the real width of six-strand floss, about 0.45 mm, at the frame size you set. A 40 cm frame is covered about once by 1,500 lines; many more lines turn it nearly solid.</p>
+    <p>Nail 0 is at the middle of the right side; numbers increase counter-clockwise. The program keeps a picture of the board with every line placed so far, each line at the real width of six-strand floss, about 0.45 mm, and on top of the earlier ones. At each step it adds the line that brings this picture closest to the photo as seen from a distance, from any thread’s current nail. It stops when no line helps or at the line count you set. Each nail pair is used once per thread.</p>
+    <p>With several threads, the threads take turns of at least 60 lines, so you change thread rarely. Between turns, a thread stays hooked at its last nail. A thread with under 3% of the lines is removed.</p>
+    <p>The preview and the PNG draw the lines the same way, at the size of the image. A 40 cm frame is covered about once by 1,500 lines.</p>
     <p>Find best settings makes small test versions, draws them at real thread width, and compares each with the photo as seen from 5 times the frame size, at least 1 m: tone, color and fine detail. It tries preset palettes and DMC floss sets that mix to the photo’s colors, or only black or white thread for a photo with little color. A grey or wood board is chosen only if it scores 3% better than white or black and shows at least as much detail. Fewer threads, lines or nails win if within 1% of the best score. Nails stay at least 3.5 mm apart.</p>
     <p>Colors are DMC floss numbers; screen colors are approximate. Lengths add 10% for knots and winding.</p>
     <p><a href="https://github.com/addisonkopplin/string_art">Source code</a></p>

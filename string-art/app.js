@@ -187,7 +187,7 @@
     const n = +$('nails').value, lay = nailLayout(F.shape, 8, frameAspect());
     const mm = lay.P * fh() / n;
     const fm = Math.max(fw(), fh());
-    $('suggest').textContent = 'About ' + fmt(SA.auto.linesFor(fm)) + ' lines at strength ' + SA.auto.strengthFor(fm) + ' suit this frame size.';
+    $('suggest').textContent = 'About ' + fmt(SA.auto.linesFor(fm)) + ' lines suit this frame size.';
     $('spacing').textContent = 'Spacing on this frame: ' + (F.unit === 'cm' ? mm.toFixed(1) + ' mm' : (mm / 25.4).toFixed(2) + ' in') + '.';
   }
   radios('shape').forEach((r) => r.addEventListener('change', () => { if (r.checked) { F.shape = r.value; syncFrameInputs(); frameChanged(); } }));
@@ -278,7 +278,7 @@
 
   // ---------- settings ----------
   const bind = (id, f) => { const el = $(id), o = $(id + '-o'); const u = () => (o.textContent = f(+el.value)); el.addEventListener('input', u); u(); };
-  bind('nails', fmt); bind('lines', fmt); bind('dark', String);
+  bind('nails', fmt); bind('lines', fmt);
   $('nails').addEventListener('input', updateSpacing);
 
   // ---------- color helpers ----------
@@ -291,9 +291,6 @@
     drawImageTo(ctx, w, h);
     return ctx.getImageData(0, 0, w, h).data;
   }
-  const monoMap = (w, h, light) => SA.monoMap(photoPixels(w, h), SA.insideMask(F.shape, w, h), light);
-  const multiMaps = (w, h, threads, board) => SA.multiMaps(photoPixels(w, h), SA.insideMask(F.shape, w, h), threads, board);
-  const budgets = SA.budgets;
 
   // ---------- result rendering ----------
   const out = $('out'), octx = out.getContext('2d');
@@ -327,10 +324,14 @@
   }
   // finished result: thread and board mixed in linear light, as they look from a distance
   function paintAll(ctx, w, h, R) {
-    const ch = SA.render(w, h, R.lay, R.threads.map((t) => t.order), R.threads.map((t) => t.count), R.threads.map((t) => t.color), R.board, R.strength, R.frameMM);
-    const img = ctx.createImageData(w, h), d = img.data;
-    for (let i = 0, j = 0; i < w * h; i++, j += 4) { d[j] = ch[0][i]; d[j + 1] = ch[1][i]; d[j + 2] = ch[2][i]; d[j + 3] = 255; }
-    ctx.putImageData(img, 0, 0);
+    // in strips, so a large export needs little memory beyond the canvas itself
+    const rows = Math.max(16, Math.floor(4e6 / w)), args = [R.lay, R.threads.map((t) => t.order), R.threads.map((t) => t.count), R.threads.map((t) => t.color), R.board, R.strength, R.frameMM, R.blocks];
+    for (let y0 = 0; y0 < h; y0 += rows) {
+      const y1 = Math.min(h, y0 + rows), ch = SA.render(w, h, ...args, [y0, y1]), n = (y1 - y0) * w;
+      const img = ctx.createImageData(w, y1 - y0), d = img.data;
+      for (let i = 0, j = 0; i < n; i++, j += 4) { d[j] = ch[0][i]; d[j + 1] = ch[1][i]; d[j + 2] = ch[2][i]; d[j + 3] = 255; }
+      ctx.putImageData(img, 0, y0);
+    }
     const { X, Y } = geom(R.lay, w, h), M = Math.max(w, h);
     ctx.fillStyle = lum(R.board) < 110 ? '#bdbdbd' : '#8a8a8a';
     for (let i = 0; i < X.length; i++) { ctx.beginPath(); ctx.arc(X[i], Y[i], Math.max(1, M / 900), 0, Math.PI * 2); ctx.fill(); }
@@ -366,83 +367,91 @@
   function setBar(f) { $('bar').style.width = (f * 100).toFixed(1) + '%'; }
   function setOutputsEnabled(on) { ['dl-png', 'dl-txt', 'print'].forEach((id) => ($(id).disabled = !on)); $('guide-note').hidden = on; }
 
+  // All threads are placed together (core.js, SA.solveJoint): at each step the best next line of
+  // any thread, from that thread's current nail, drawn on top of all earlier lines. Threads take
+  // turns of at least 60 lines, so the thread changes stay few.
+  const STRENGTH = 0.24;   // only used by the old single-thread render path; kept for scoreResult
   function start() {
     if (!S.img || S.running) return;
     if (S.worker) S.worker.terminate();
     cancelAnimationFrame(raf);
-    const n = +$('nails').value, L = +$('lines').value, strength = +$('dark').value / 100;
-    const A = frameAspect(), lay = nailLayout(F.shape, n, A), [w, h] = workSize(A), c = cur();
+    const n = +$('nails').value, L = +$('lines').value, frameMM = Math.max(fw(), fh());
+    const A = frameAspect(), lay = nailLayout(F.shape, n, A), [w, h] = SA.workSize(A, SA.auto.jointRes(frameMM)), c = cur();
     const mode = modeOf(c.threads.length), light = mode === 'one' && lightOnDark(c.threads[0], c.board);
     setOutputsEnabled(false); setBar(0); $('shoplist').hidden = true;
     if (!S.onFinish) $('auto-note').hidden = true;
-    setStatus(mode === 'multi' ? 'Separating colors…' : 'Preparing lines…');
+    setStatus('Placing lines…');
     $('run').textContent = 'Making string art…'; $('run').disabled = true; $('auto').disabled = true;
     S.running = true;
-    // let the status paint before the color separation, which blocks for a moment
     setTimeout(() => {
-      const multi = mode === 'multi';
-      const maps = multi ? multiMaps(w, h, c.threads, c.board) : monoMap(w, h, light);
-      const bud = multi ? budgets(maps, L) : [L];
-      const R = S.result = { key: frameKey(), shape: F.shape, A, lay, frameMM: Math.max(fw(), fh()), nails: n, lines: L, strength, mode, light, board: c.board, boardKey: C.board, finished: false,
-        threads: c.threads.map((col, i) => ({ color: col, code: C.threads[i], budget: bud[i], order: new Uint16Array(bud[i] + 1), rec: 0, drawn: 0, count: bud[i], done: false })) };
+      const d = photoPixels(w, h);
+      const R = S.result = { key: frameKey(), shape: F.shape, A, lay, frameMM, nails: n, lines: L, strength: STRENGTH, mode, light, board: c.board, boardKey: C.board, finished: false,
+        threads: c.threads.map((col, i) => ({ color: col, code: C.threads[i], order: null, count: 0 })), blocks: null, switches: 0, bi: 0, bk: 0, drawn: 0 };
       resizeOut(); paintBoard(octx, out.width, out.height, R);
-      perFrame = Math.max(10, Math.ceil(L / 180)); timing = null;
+      timing = null;
       const NX = new Int32Array(n), NY = new Int32Array(n);
       for (let i = 0; i < n; i++) { NX[i] = Math.round((w - 1) / 2 + (lay.u[i] - 0.5) * (w - 2)); NY[i] = Math.round((h - 1) / 2 + (lay.v[i] - 0.5) * (h - 2)); }
       const wk = new Worker('worker.js'); S.worker = wk;
       wk.onmessage = (e) => {
         const m = e.data;
-        if (m.type === 'prep') { setStatus('Preparing lines: ' + Math.round(m.done * 100) + '%'); setBar(m.done * 0.1); }
-        else if (m.type === 'lines') {
-          const t = R.threads[m.color];
-          if (m.budget && m.budget !== t.budget) { const o = new Uint16Array(m.budget + 1); o.set(t.order.subarray(0, t.rec)); t.order = o; t.budget = m.budget; }
-          t.order.set(m.nails, t.rec); t.rec += m.nails.length;
+        if (m.type === 'progress') { setStatus('Placing lines: ' + fmt(m.total) + ' of at most ' + fmt(L)); setBar(0.6 * m.total / L); }
+        else if (m.type === 'done') {
+          timing = m; wk.terminate(); S.worker = null;
+          R.threads.forEach((t, i) => { t.order = Uint16Array.from(m.orders[i]); t.count = m.counts[i]; });
+          R.blocks = m.blocks; R.switches = m.switches;
+          perFrame = Math.max(10, Math.ceil(R.blocks.reduce((p, b) => p + b[2] - b[1], 0) / 120));
+          raf = requestAnimationFrame(frame);
         }
-        else if (m.type === 'colorDone') { const t = R.threads[m.color]; t.count = m.count; t.done = true; }
-        else if (m.type === 'done') { timing = m; wk.terminate(); S.worker = null; }
       };
       wk.onerror = () => { setStatus('The calculation stopped because of an error. Try fewer nails or lines.'); cancelAnimationFrame(raf); stop(); };
-      wk.postMessage({ type: 'run', w, h, nails: n, nx: NX, ny: NY, edge: lay.edge, strength, skip: SA.skipFor(n),
-        maps: maps.map((m) => m.buffer), budgets: bud, start: 0, penalty: 0.25 }, maps.map((m) => m.buffer));
+      wk.postMessage({ type: 'joint', w, h, nails: n, nx: NX, ny: NY, edge: lay.edge, skip: SA.skipFor(n), d: d.buffer, shape: F.shape,
+        threads: c.threads, board: c.board, maxLines: L, frameMM }, [d.buffer]);
       if (window.matchMedia('(max-width: 860px)').matches) $('h-res').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      raf = requestAnimationFrame(frame);
     }, 30);
   }
   function stop() { S.running = false; $('run').textContent = 'Make string art'; $('run').disabled = !S.img; $('auto').disabled = !S.img; }
+  // threads under 3% of the lines are left out; their turns are removed and the others renumbered
+  function dropSmall(R) {
+    const tot = R.threads.reduce((p, t) => p + t.count, 0);
+    const keep = R.threads.map((t) => R.threads.length === 1 || t.count >= SA.auto.MIN_SHARE * tot);
+    const drop = R.threads.filter((_, i) => !keep[i]);
+    if (!drop.length) return drop;
+    const idx = []; let k = 0; keep.forEach((x, i) => { idx[i] = x ? k++ : -1; });
+    R.threads = R.threads.filter((_, i) => keep[i]);
+    const bl = [];
+    R.blocks.filter((b) => keep[b[0]]).forEach((b) => { const t = idx[b[0]], p = bl[bl.length - 1]; if (p && p[0] === t && p[2] === b[1]) p[2] = b[2]; else bl.push([t, b[1], b[2]]); });
+    R.blocks = bl; R.switches = Math.max(0, bl.length - R.threads.length);
+    C.threads = C.threads.filter((c) => !drop.some((t) => t.code === c)); $('palette').value = 'custom'; renderThreads();
+    return drop;
+  }
   function frame() {
-    const R = S.result; let left = $('animate').checked ? perFrame : Infinity;
-    for (let i = 0; i < R.threads.length && left > 0; i++) {
-      const t = R.threads[i];
-      const to = Math.min(t.rec - 1, t.drawn + left);
-      if (to > t.drawn) { drawSegments(octx, out.width, out.height, R, i, t.drawn, to); left -= to - t.drawn; t.drawn = to; }
-      if (!(t.done && t.drawn >= t.count)) break;   // threads are drawn in winding order
+    const R = S.result, B = R.blocks, total = B.reduce((p, b) => p + b[2] - b[1], 0);
+    let left = $('animate').checked ? perFrame : Infinity;
+    // lines are drawn in winding order, each turn of a thread on top of the earlier ones
+    while (left > 0 && R.bi < B.length) {
+      const [t, a, b] = B[R.bi], from = a + R.bk, to = Math.min(b, from + left);
+      if (to > from) drawSegments(octx, out.width, out.height, R, t, from, to);
+      left -= to - from; R.drawn += to - from; R.bk = to - a;
+      if (to >= b) { R.bi++; R.bk = 0; }
     }
-    const total = R.threads.reduce((p, t) => p + t.budget, 0), drawn = R.threads.reduce((p, t) => p + t.drawn, 0);
-    const ti = R.threads.findIndex((t) => !(t.done && t.drawn >= t.count));
-    if (drawn > 0) {
-      setStatus((R.threads.length > 1 && ti >= 0 ? 'Thread ' + (ti + 1) + ' of ' + R.threads.length + ' · ' : '') + 'Line ' + fmt(drawn) + ' of ' + fmt(total));
-      setBar(0.1 + 0.9 * drawn / total);
-    }
-    if (timing && ti < 0) {
-      const asked = R.lines;
-      // threads with under 3% of the lines are left out of the result
-      const tot = R.threads.reduce((p, t) => p + t.count, 0), drop = R.threads.length > 1 ? R.threads.filter((t) => t.count < SA.auto.MIN_SHARE * tot) : [];
-      if (drop.length) {
-        R.threads = R.threads.filter((t) => !drop.includes(t));
-        C.threads = C.threads.filter((c) => !drop.some((t) => t.code === c)); $('palette').value = 'custom'; renderThreads();
-      }
-      paintAll(octx, out.width, out.height, R);
-      R.finished = true; R.lines = R.threads.reduce((p, t) => p + t.count, 0);
-      setBar(1); stop(); setOutputsEnabled(R.key === frameKey()); renderLegend();
-      setStatus('Finished: ' + fmt(R.lines) + ' lines on ' + fmt(R.nails) + ' nails' + (R.threads.length > 1 ? ', ' + R.threads.length + ' threads' : '') +
-        '. Calculated in ' + (timing.totalMs / 1000).toFixed(1) + ' s.' +
-        (R.lines + drop.reduce((p, t) => p + t.count, 0) < asked ? ' It stopped before ' + fmt(asked) + ' lines: no further line brings the image closer to the photo.' : '') +
-        (drop.length ? ' Removed ' + drop.map((t) => dmcLabel(t.code)).join(' and ') + ': under 3% of the lines.' : ''));
-      if (S.onFinish) { const f = S.onFinish; S.onFinish = null; f(R); }
-      document.body.dataset.state = 'done';
+    if (R.bi < B.length) {
+      const t = B[R.bi][0];
+      setStatus((R.threads.length > 1 ? dmcLabel(R.threads[t].code) + ' · ' : '') + 'Line ' + fmt(R.drawn) + ' of ' + fmt(total));
+      setBar(0.6 + 0.4 * R.drawn / total);
+      raf = requestAnimationFrame(frame);
       return;
     }
-    raf = requestAnimationFrame(frame);
+    const asked = R.lines, drop = dropSmall(R);
+    paintAll(octx, out.width, out.height, R);
+    R.finished = true; R.lines = R.threads.reduce((p, t) => p + t.count, 0);
+    setBar(1); stop(); setOutputsEnabled(R.key === frameKey()); renderLegend();
+    const multi = R.threads.length > 1;
+    setStatus('Finished: ' + fmt(R.lines) + ' lines on ' + fmt(R.nails) + ' nails' + (multi ? ', ' + R.threads.length + ' threads in ' + fmt(R.blocks.length) + ' turns' : '') +
+      '. Calculated in ' + (timing.totalMs / 1000).toFixed(1) + ' s.' +
+      (R.lines + drop.reduce((p, t) => p + t.count, 0) < asked ? ' It stopped before ' + fmt(asked) + ' lines: no further line brings the image closer to the photo.' : '') +
+      (drop.length ? ' Removed ' + drop.map((t) => dmcLabel(t.code)).join(' and ') + ': under 3% of the lines.' : ''));
+    if (S.onFinish) { const f = S.onFinish; S.onFinish = null; f(R); }
+    document.body.dataset.state = 'done';
   }
   $('run').addEventListener('click', () => { document.body.dataset.state = 'running'; start(); });
 
@@ -466,18 +475,22 @@
     S.auto = null; S.running = false; autoUI(false); setBar(0);
     if (msg) setStatus(msg);
   }
-  function runTasks(st, pool, tasks, onDone) {
+  // With a `deadline` (a Date.now() time, 0 for none), a task is not started if it would likely
+  // end after it (judged by the tasks done so far); a skipped task's result is null.
+  function runTasks(st, pool, tasks, onDone, deadline) {
     return new Promise((resolve, reject) => {
       const out = new Array(tasks.length), pending = tasks.map((t, i) => ({ t, i }));
-      let left = tasks.length;
+      let left = tasks.length, took = 0, done = 0;
       if (!left) { resolve(out); return; }
       const feed = (h) => {
         if (st.cancelled || !pending.length) return;
+        if (deadline && Date.now() + (done ? 0.7 * took / done : 0) > deadline) { left -= pending.length; pending.length = 0; if (!left) resolve(out); return; }
         // prefer a test that reuses this worker's pixel lists
         let k = pending.findIndex((p) => p.t.key === h.cache); if (k < 0) k = 0;
-        const p = pending.splice(k, 1)[0];
+        const p = pending.splice(k, 1)[0], t0 = Date.now();
         h.w.onmessage = (e) => {
           const m = e.data; if (m.type === 'ready') return;
+          took += Date.now() - t0; done++;
           if (m.cache !== undefined) h.cache = m.cache;
           out[p.i] = m; left--;
           if (onDone) onDone(tasks.length - left, tasks.length);
@@ -507,9 +520,9 @@
       h.w.onerror = (e) => { e.preventDefault(); rej(new Error('worker')); };
       h.w.postMessage(msg);
     }))).then((r) => r[0]);
-    const run = (msgs, label, a, b) => runTasks(st, st.workers, msgs.map((m) => ({ key: m.job ? m.job.n + '|' + m.job.res : null, msg: m })), (d, n) => {
+    const run = (msgs, label, a, b, deadline) => runTasks(st, st.workers, msgs.map((m) => ({ key: m.job ? m.job.n + '|' + m.job.res : null, msg: m })), (d, n) => {
       setBar(a + (b - a) * d / n); setStatus('Finding best settings · ' + label + ' · test ' + d + ' of ' + n);
-    });
+    }, deadline);
     try {
       // without colors, the search uses black thread on a white board
       const cur = colors ? { board: C.board, threads: C.threads.slice() } : { board: 'white', threads: ['310'] };
@@ -519,12 +532,12 @@
       const secs = (performance.now() - t0) / 1000, changed = st.sig !== viewSig(), p = r.settings;
       autoEnd();
       if (changed) { setStatus('The photo or frame changed during the search. Select Find best settings again.'); return; }
-      setRange('nails', p.nails); setRange('lines', p.lines); setRange('dark', p.strength);
+      setRange('nails', p.nails); setRange('lines', p.lines);
       C.threads = p.threads.slice(); C.board = p.board;
       $('palette').value = presetName({ board: p.board, threads: p.threads }) || 'custom'; renderThreads();
       const sp = r.spacingMM;
       const note = 'Find best settings tested ' + fmt(r.tested) + ' combinations in ' + secs.toFixed(1) + ' s and chose ' + fmt(p.nails) + ' nails (' +
-        (F.unit === 'in' ? (sp / 25.4).toFixed(2) + ' in' : sp.toFixed(1) + ' mm') + ' apart), ' + fmt(p.lines) + ' lines, thread strength ' + p.strength + ', and ' +
+        (F.unit === 'in' ? (sp / 25.4).toFixed(2) + ' in' : sp.toFixed(1) + ' mm') + ' apart), at most ' + fmt(p.lines) + ' lines, and ' +
         p.threads.map((c) => dmcLabel(c)).join(', ') + ' on a ' + BOARDS[p.board].name.toLowerCase() + ' board. You can change any setting and select Make string art again.';
       window.__stringArt.lastAuto = { secs, tested: r.tested, workers: NW, stages: r.stages, pick: Object.assign({ score: r.pick.score, de: r.pick.de, dab: r.pick.dab, detail: r.pick.detail }, p), chroma: r.chroma, palettes: r.palettes, bestScore: r.bestScore, first: r.first };
       S.onFinish = () => { $('auto-note').textContent = note; $('auto-note').hidden = false; };
@@ -546,34 +559,39 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
   const baseName = () => { const R = S.result; return 'string-art-' + R.shape + '-' + R.nails + '-nails-' + R.lines + '-lines-dmc-' + R.threads.map((t) => t.code.toLowerCase()).join('-'); };
+  // The PNG is drawn at its own size, not scaled up: each line at the real thread width.
+  // Phones and devices with little memory get at most 1,600 px.
+  const pngMax = () => ((navigator.deviceMemory && navigator.deviceMemory <= 4) || window.matchMedia('(pointer: coarse)').matches ? 1600 : 2400);
   function renderPNG(max) {
     const R = S.result, [w, h] = fitSize(R.A, max), c = document.createElement('canvas'); c.width = w; c.height = h;
-    const ctx = c.getContext('2d');
-    if (max <= 1200) { paintAll(ctx, w, h, R); return c; }
-    // larger sizes: the 1200 px render scaled up (thread wider than 2 px is not drawn exactly)
-    const [w1, h1] = fitSize(R.A, 1200), t = document.createElement('canvas'); t.width = w1; t.height = h1;
-    paintAll(t.getContext('2d'), w1, h1, R);
-    ctx.imageSmoothingQuality = 'high'; ctx.drawImage(t, 0, 0, w, h);
+    paintAll(c.getContext('2d'), w, h, R);
     return c;
   }
   const NUMBERING = 'Nail 0 is at the middle of the right side; the numbers increase counter-clockwise.';
+  // turns in winding order: [thread, first line, end line, step number of the first line]
+  function turns(R) { let k = 1; return R.blocks.map((b) => { const r = [b[0], b[1], b[2], k]; k += b[2] - b[1]; return r; }); }
   function nailOrderText() {
-    const R = S.result, multi = R.threads.length > 1, m = threadMeters(R);
+    const R = S.result, multi = R.threads.length > 1, m = threadMeters(R), T = turns(R);
     const head = ['# String art nail order',
       '# Frame: ' + frameText() + '. Board: ' + BOARDS[R.boardKey].name.toLowerCase() + '.',
       '# ' + R.nails + ' nails, numbered 0 to ' + (R.nails - 1) + '. ' + NUMBERING,
       '# Thread: DMC six-strand embroidery floss. Skeins hold 8 m. Lengths include 10% for knots and winding.'];
     R.threads.forEach((t, i) => head.push('#   ' + (multi ? (i + 1) + '. ' : '') + dmcLabel(t.code) + ': ' + fmt(t.count) + ' lines, ' + meters(m[i]) + ', ' + skeins(m[i])));
-    head.push(multi ? '# Wind the threads in the order listed; the last thread lies on top. Each thread section lists one nail number per row, in winding order, starting with the first nail.'
-      : '# One nail number per row, in winding order, starting with the first nail.');
+    if (multi) {
+      head.push('# ' + fmt(R.lines) + ' steps in ' + T.length + ' turns (' + R.switches + ' thread changes). Wind the steps in order; each line lies on top of the earlier ones.',
+        '# Tie each thread to its first nail when its first turn starts. Between turns, leave it hooked at its last nail and continue from there.',
+        '# Each row: step, thread, from nail, to nail.');
+    } else head.push('# One nail number per row, in winding order, starting with the first nail.');
     let s = head.join('\n') + '\n';
-    R.threads.forEach((t, i) => {
-      if (multi) s += '\n# Thread ' + (i + 1) + ' of ' + R.threads.length + ': ' + dmcLabel(t.code) + ', ' + t.count + ' lines\n';
-      s += Array.from(t.order.subarray(0, t.count + 1)).join('\n') + '\n';
+    if (!multi) return s + Array.from(R.threads[0].order.subarray(0, R.threads[0].count + 1)).join('\n') + '\n';
+    T.forEach(([t, a, b, k0], i) => {
+      const th = R.threads[t], o = th.order;
+      s += '\n# Turn ' + (i + 1) + ' of ' + T.length + ': ' + (t + 1) + '. ' + dmcLabel(th.code) + ', steps ' + k0 + ' to ' + (k0 + b - a - 1) + (a ? ', from nail ' + o[a] : ', tie on at nail ' + o[0]) + '\n';
+      for (let k = a; k < b; k++) s += 'Step ' + (k0 + k - a) + ': ' + dmcLabel(th.code) + ', nail ' + o[k] + ' to ' + o[k + 1] + '\n';
     });
     return s;
   }
-  $('dl-png').addEventListener('click', () => renderPNG(2400).toBlob((b) => save(b, baseName() + '.png'), 'image/png'));
+  $('dl-png').addEventListener('click', () => renderPNG(pngMax()).toBlob((b) => save(b, baseName() + '.png'), 'image/png'));
   $('dl-txt').addEventListener('click', () => save(new Blob([nailOrderText()], { type: 'text/plain' }), baseName() + '-nail-order.txt'));
 
   // ---------- build guide ----------
@@ -647,7 +665,7 @@
          'Trim each template page along its border. Tape the pages together edge to edge, in the order given by the row and column labels.']
       : ['The template on the next page is reduced to fit the paper. Use it to see the nail numbering. For a full-size template, choose “Full size, tiled”.'];
     steps.push('Fix the template to the board. Put a nail at each dot. ' + NUMBERING.replace(';', ', and'));
-    if (multi) steps.push('Wind the threads in the order listed below. For each thread, tie it to the first nail of its sequence, wind it to each nail in order, keeping the thread taut, then tie it off at the last nail. The last thread lies on top.');
+    if (multi) steps.push('Wind the steps in order, keeping the thread taut. The threads take turns (' + fmt(R.blocks.length) + ' turns, ' + fmt(R.switches) + ' thread changes). At the start of a thread’s first turn, tie it to the nail given. Between turns, leave it hooked at its last nail; its next turn starts there. Each line lies on top of the earlier ones.', 'Tie off each thread after its last step.');
     else steps.push('Tie the thread to nail ' + R.threads[0].order[0] + '. Wind it to each nail in the winding sequence, in order, keeping the thread taut.', 'Tie off the thread at the last nail.');
     const sw = (c) => '<span class="gsw" style="background:' + c + '"></span>', tm = threadMeters(R);
     const threadRows = '<dt>' + (multi ? 'Threads' : 'Thread') + '</dt><dd>' + R.threads.map((t, i) => sw(t.color) + (multi ? (i + 1) + '. ' : '') + dmcLabel(t.code) + ', ' + fmt(t.count) + ' lines').join('<br>') + '</dd>';
@@ -661,19 +679,19 @@
       '<ol>' + steps.map((t) => '<li>' + t + '</li>').join('') + '</ol>' +
       '<img src="' + img + '" alt="" style="width:' + iw.toFixed(1) + 'mm;height:' + ih.toFixed(1) + 'mm;display:block;margin-top:4mm"></div>');
     tplPages.forEach((t) => pages.push('<div class="gpage">' + t + '</div>'));
-    // winding sequence, one block per thread
-    const COLS = 8, ROWS = Math.floor((ch - 24) / 3.73), per = COLS * ROWS;
-    R.threads.forEach((t, ti) => {
-      const name = multi ? ' · thread ' + (ti + 1) + ' of ' + R.threads.length + ': ' + dmcLabel(t.code) : '';
-      for (let p = 0, k = 1; k <= t.count; p++) {
-        let cells = '';
-        for (let i = 0; i < per && k <= t.count; i++, k++)
-          cells += '<div' + (k % 100 === 1 && k > 1 ? ' class="hund"' : '') + '><span class="s">' + k + '</span><span class="n">' + t.order[k] + '</span></div>';
-        pages.push('<div class="gpage seq"><h2>' + (multi ? sw(t.color) : '') + 'Winding sequence' + name + (p ? ' (continued)' : '') + '</h2>' +
-          (p ? '' : '<p style="margin:0 0 3mm">Start at nail ' + t.order[0] + '. Each row gives the step number and the nail to wind to. A line marks every 100 steps.</p>') +
-          '<div class="cols" style="column-count:' + COLS + '">' + cells + '</div></div>');
-      }
+    // winding sequence: one list in winding order; with several threads a header marks each turn
+    const COLS = 8, ROWS = Math.floor((ch - 24) / 3.73), per = COLS * ROWS, cells = [];
+    if (!multi) { const t = R.threads[0]; for (let k = 1; k <= t.count; k++) cells.push('<div' + (k % 100 === 1 && k > 1 ? ' class="hund"' : '') + '><span class="s">' + k + '</span><span class="n">' + t.order[k] + '</span></div>'); }
+    else turns(R).forEach(([t, a, b, k0]) => {
+      const th = R.threads[t];
+      cells.push('<div class="turn">' + sw(th.color) + 'DMC ' + th.code + '</div>', '<div><span class="s">' + (a ? 'from' : 'tie on') + '</span><span class="n">' + th.order[a] + '</span></div>');
+      for (let k = a + 1; k <= b; k++) cells.push('<div><span class="s">' + (k0 + k - a - 1) + '</span><span class="n">' + th.order[k] + '</span></div>');
     });
+    for (let p = 0; p * per < cells.length; p++)
+      pages.push('<div class="gpage seq"><h2>Winding sequence' + (p ? ' (continued)' : '') + '</h2>' +
+        (p ? '' : '<p style="margin:0 0 3mm">' + (multi ? 'Each row gives the step number and the nail to wind to. A header with the thread color starts each turn; “from” is the nail where that thread was left.'
+          : 'Start at nail ' + R.threads[0].order[0] + '. Each row gives the step number and the nail to wind to. A line marks every 100 steps.') + '</p>') +
+        '<div class="cols" style="column-count:' + COLS + '">' + cells.slice(p * per, (p + 1) * per).join('') + '</div></div>');
     $('guide').innerHTML = pages.join('');
     let st = $('page-style');
     if (!st) { st = document.createElement('style'); st.id = 'page-style'; document.head.appendChild(st); }
@@ -688,7 +706,7 @@
   function scoreResult() {
     const R = S.result; if (!R || !R.finished) return null;
     return SA.scoreResult({ photo: photoPixels, shape: R.shape, A: R.A, lay: R.lay, orders: R.threads.map((t) => t.order), counts: R.threads.map((t) => t.count),
-      threads: R.threads.map((t) => t.color), board: R.board, strength: R.strength, frameMM: R.frameMM });
+      threads: R.threads.map((t) => t.color), board: R.board, strength: R.strength, frameMM: R.frameMM, blocks: R.blocks });
   }
   window.__stringArt = { buildGuide, nailOrderText, nailLayout, state: S, frame: F, colors: C, dmc: DMC, nearestDMC, core: SA, scoreResult };
 })();

@@ -9,6 +9,7 @@ let ctx = null;
 self.onmessage = function (e) {
   const m = e.data;
   if (m.type === 'run') run(m);
+  else if (m.type === 'joint') joint(m);
   else if (m.type === 'init') {
     ctx = { shape: m.shape, A: m.A, frameMM: m.frameMM || 400, photo: {}, cache: null, solveOpts: m.solveOpts };
     for (const p of m.photos) ctx.photo[p.res] = { d: new Uint8ClampedArray(p.d), w: p.w, h: p.h, inside: SA.insideMask(m.shape, p.w, p.h) };
@@ -39,4 +40,18 @@ function run(m) {
     onEnd: (c, k) => { flush(k); self.postMessage({ type: 'colorDone', color: c, count: k }); }
   }, (c, k) => { if (performance.now() - lastPost > 30) flush(k); });
   self.postMessage({ type: 'done', counts: r.counts, prepMs: tPrep, totalMs: performance.now() - t0 });
+}
+
+// All threads placed together (SA.solveJoint); progress is posted while it runs.
+function joint(m) {
+  const t0 = performance.now(), n = m.nails;
+  const P = SA.prepare(n, m.nx, m.ny, m.edge, m.w, m.skip);
+  const tPrep = performance.now() - t0;
+  const inside = SA.insideMask(m.shape, m.w, m.h);
+  let last = 0;
+  const r = SA.solveJoint(P, new Uint8ClampedArray(m.d), inside, m.threads, m.board, {
+    frameMM: m.frameMM, maxLines: m.maxLines, minBlock: m.minBlock, switchPenalty: m.switchPenalty,
+    stop: (total) => { const t = performance.now(); if (t - last > 40) { last = t; self.postMessage({ type: 'progress', total }); } return false; }
+  });
+  self.postMessage({ type: 'done', joint: true, orders: r.orders.map((o) => Array.from(o)), counts: r.counts, blocks: r.blocks, switches: r.switches, prepMs: tPrep, totalMs: performance.now() - t0 });
 }
