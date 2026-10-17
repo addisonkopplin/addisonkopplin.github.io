@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Addison Kopplin · Projects</title>
-<meta name="description" content="Projects by Addison Kopplin, mechanical engineer: String Art Maker, Harmonograph Maker, and a fractal tree generator.">
-<meta property="og:title" content="Addison Kopplin · Projects">
-<meta property="og:description" content="Projects by Addison Kopplin, mechanical engineer: String Art Maker, Harmonograph Maker, and a fractal tree generator.">
+<title>String &amp; Pendulum</title>
+<meta name="description" content="Free browser tools for making line art from thread and pendulums. Nothing is uploaded: everything runs on your computer.">
+<meta property="og:title" content="String &amp; Pendulum">
+<meta property="og:description" content="Free browser tools for making line art from thread and pendulums. Nothing is uploaded: everything runs on your computer.">
 <meta property="og:url" content="https://addisonkopplin.com/">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="String &amp; Pendulum">
 <link rel="canonical" href="https://addisonkopplin.com/">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#ffffff">
@@ -27,8 +28,8 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius
 .page{max-width:58rem;margin:0 auto;padding:6rem 2.5rem 4rem}
 header.top{display:grid;grid-template-columns:var(--label) 1fr;column-gap:3rem;padding-bottom:3rem}
 header.top .inner{grid-column:2}
-h1{margin:0;color:var(--ink);font-weight:650;font-size:3rem;line-height:1.05;letter-spacing:-.032em}
-.title{margin:.6rem 0 0;font-size:1.25rem;color:var(--mute);letter-spacing:-.01em}
+h1{margin:0;color:var(--ink);font-weight:650;font-size:2.75rem;line-height:1.05;letter-spacing:-.032em}
+.title{margin:.75rem 0 0;max-width:36rem;font-size:1.1875rem;line-height:1.5;color:var(--mute);letter-spacing:-.01em}
 .links{list-style:none;margin:1.75rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.4rem 1.75rem;font-size:.9375rem}
 section{display:grid;grid-template-columns:var(--label) minmax(0,1fr);column-gap:3rem;border-top:1px solid var(--rule);padding:2.25rem 0 2.5rem}
 section>h2{margin:.2rem 0 0;font-size:.75rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink)}
@@ -49,6 +50,9 @@ li::marker{color:#a0a0a0}
 .plink a,.text a.go{color:var(--accent);text-decoration-color:color-mix(in srgb,var(--accent) 35%,transparent)}
 .text p{margin:0 0 .6rem;max-width:40rem;font-size:.9375rem;line-height:1.6}
 .text h3{margin-bottom:.2rem}
+h3 a.tname{text-decoration:none;color:var(--ink)}h3 a.tname:hover{color:var(--accent)}
+.entry h3{margin-bottom:.6rem}
+.pbody{grid-template-columns:minmax(0,1fr) 11rem}
 @media (max-width:760px){
  .page{padding:3.5rem 1.375rem 3rem}
  header.top,section{grid-template-columns:1fr}
@@ -63,7 +67,7 @@ li::marker{color:#a0a0a0}
  .eh h3{order:1}.eh .date{order:2}
  .role{margin-top:.1rem}
  .pbody{grid-template-columns:1fr;gap:1rem}
- .pfig{max-width:12rem}
+ .pfig{max-width:14rem}
 }
 </style>
 </head>
@@ -71,30 +75,18 @@ li::marker{color:#a0a0a0}
 <a class="skip" href="#main">Skip to content</a>
 <div class="page">
 <header class="top"><div class="inner">
-<h1>Addison Kopplin</h1>
-<p class="title">Mechanical engineer. Projects in code and hardware.</p>
-<ul class="links">
-<li><a href="https://github.com/addisonkopplin" rel="me">GitHub</a></li>
-<li><a href="https://www.linkedin.com/in/addisonkopplin" rel="me">LinkedIn</a></li>
-<li><a href="/shop/">Shop</a></li>
-</ul>
+<h1>String &amp; Pendulum</h1>
+<p class="title">Free browser tools for making line art from thread and pendulums. Nothing is uploaded: everything runs on your computer.</p>
 </div></header>
 <main id="main">
-<section aria-labelledby="h-prj"><h2 id="h-prj">Projects</h2><div>
+<section aria-labelledby="h-tools"><h2 id="h-tools">Tools</h2><div>
 <article class="entry has-fig">
-<div class="eh"><h3>String Art Maker</h3><p class="date"><a href="https://github.com/addisonkopplin/string_art">string_art on GitHub</a></p></div>
-<p class="role">Python, NumPy, JavaScript</p>
-<div class="pbody"><div><ul><li>Converts a photo into string art: one thread wound between nails spaced evenly around a circle.</li><li>At each step, the program picks the straight line between two nails that crosses the darkest part of the image. It then lightens those pixels so that later lines cover other areas.</li><li>The browser version shows the result as it is drawn and prints a numbered nail template and the winding sequence.</li><li>The image shows a portrait of Albert Einstein made from 5,000 lines on 288 nails.</li></ul><p class="plink"><a href="/string-art/">Try it in your browser</a></p></div><figure class="pfig"><img src="images/string-art-einstein.jpg" width="400" height="400" alt="String art portrait of Albert Einstein sticking out his tongue, drawn with 5,000 straight black lines inside a circle" loading="lazy" decoding="async"><figcaption>Source photo: Arthur Sasse, public domain.</figcaption></figure></div>
+<h3><a class="tname" href="/string-art/">String Art Maker</a></h3>
+<div class="pbody"><div class="text"><p>Turns a photo into string art: one thread wound between nails spaced evenly around a circle.</p><p>At each step it picks the straight line between two nails that crosses the darkest part of the image, then lightens those pixels so later lines cover other areas. It prints a numbered nail template and the winding sequence.</p><p class="plink"><a href="/string-art/">Open the String Art Maker</a></p></div><figure class="pfig"><a href="/string-art/" tabindex="-1" aria-hidden="true"><img src="/images/string-art-einstein.jpg" width="400" height="400" alt="String art portrait of Albert Einstein sticking out his tongue, drawn with 5,000 straight black lines inside a circle" loading="lazy" decoding="async"></a><figcaption>Albert Einstein, 5,000 lines on 288 nails. Source photo: Arthur Sasse, public domain.</figcaption></figure></div>
 </article>
-<article class="entry">
-<div class="eh"><h3>Harmonograph Maker</h3></div>
-<p class="role">JavaScript, Canvas, SVG</p>
-<div class="pbody"><div><ul><li>Simulates a harmonograph: a machine in which swinging pendulums move a pen across paper.</li><li>Sliders set the frequency, phase, amplitude, and damping of up to three pendulums. The page draws the resulting curve.</li><li>Exports the drawing as SVG for pen plotters and laser cutters, or as PNG. The page address stores the settings, so a link reopens the same drawing.</li></ul><p class="plink"><a href="/harmonograph/">Try it in your browser</a></p></div></div>
-</article>
-<article class="entry">
-<div class="eh"><h3>Fractal tree</h3><p class="date"><a href="https://github.com/addisonkopplin/fractal_tree">fractal_tree on GitHub</a></p></div>
-<p class="role">Python, NumPy, Matplotlib</p>
-<div class="pbody"><div><ul><li>Draws a tree in which every branch splits into two smaller branches.</li><li>Each new branch turns 30° left or right and is 0.67 times the length of the branch before it. The tree has 10 levels.</li></ul></div></div>
+<article class="entry has-fig">
+<h3><a class="tname" href="/harmonograph/">Harmonograph Maker</a></h3>
+<div class="pbody"><div class="text"><p>Draws the curves traced by a harmonograph, a machine in which swinging pendulums move a pen across paper.</p><p>Sliders set the frequency, phase, amplitude, and damping of up to three pendulums. Download the drawing as SVG for a pen plotter or laser cutter, or as PNG. The page address stores the settings, so a link reopens the same drawing.</p><p class="plink"><a href="/harmonograph/">Open the Harmonograph Maker</a></p></div><figure class="pfig"><a href="/harmonograph/" tabindex="-1" aria-hidden="true"><img src="/images/harmonograph.jpg" width="400" height="400" alt="Harmonograph drawing: thousands of fine black curves forming overlapping loops around a dense center" loading="lazy" decoding="async"></a><figcaption>Two pendulums, frequency ratio 2 : 3.</figcaption></figure></div>
 </article>
 </div></section>
 <section aria-labelledby="h-shop"><h2 id="h-shop">Shop</h2><div class="text">
