@@ -55,7 +55,7 @@ var{font-style:italic}
  h1{font-size:2.25rem}
  .tool{grid-template-columns:1fr}
  .controls{max-width:30rem}
- .how{grid-template-columns:1fr}
+ .how{grid-template-columns:minmax(0,1fr)}
  .text .eq{font-size:.875rem}
 }
 @media print{
