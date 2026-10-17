@@ -5,15 +5,20 @@ Usage:  python3 tools/refresh_data.py            # download fresh files, rebuild
         python3 tools/refresh_data.py --offline  # rebuild from files already in tools/cache/
 
 Standard library only. Source files: https://download.bls.gov/pub/time.series/{cu,pc}/
-BLS refuses requests whose User-Agent has no contact email (HTTP 403). Set one first:
-    BLS_CONTACT=you@example.com python3 tools/refresh_data.py
+These are bulk flat files, not the BLS API, so no registration key is needed. BLS does refuse
+downloads (HTTP 403) unless the User-Agent includes a contact email. Set one first:
+    export PRICES_CONTACT_EMAIL=you@example.com
+(BLS_CONTACT is also accepted.) --offline needs no contact.
 """
 import json, os, sys, urllib.request, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HERE, "cache")
 OUT = os.path.join(HERE, "..", "data", "prices.json")
-CONTACT = os.environ.get("BLS_CONTACT", "")
+def _contact():
+    """Contact email for the User-Agent, from PRICES_CONTACT_EMAIL (or BLS_CONTACT). Empty if unset."""
+    return (os.environ.get("PRICES_CONTACT_EMAIL") or os.environ.get("BLS_CONTACT") or "").strip()
+CONTACT = _contact()
 START_YEAR = 2000
 BASE = "https://download.bls.gov/pub/time.series/"
 FILES = ["cu/cu.data.1.AllItems", "cu/cu.data.11.USFoodBeverage", "cu/cu.data.12.USHousing",
@@ -63,8 +68,8 @@ def fetch(rel, offline):
     path = os.path.join(CACHE, rel.split("/")[-1])
     if not offline:
         if "@" not in CONTACT:
-            sys.exit("Set BLS_CONTACT to a contact email (BLS returns 403 without one), or use --offline.")
-        req = urllib.request.Request(BASE + rel, headers={"User-Agent": f"StringAndPendulum-prices/1.0 ({CONTACT})"})
+            sys.exit("Set PRICES_CONTACT_EMAIL to a contact email (BLS returns 403 without one), or use --offline.")
+        req = urllib.request.Request(BASE + rel, headers={"User-Agent": f"Workbench-prices-refresh/1.0 ({CONTACT})"})
         with urllib.request.urlopen(req, timeout=120) as r, open(path, "wb") as f:
             f.write(r.read())
     if not os.path.exists(path):
