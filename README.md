@@ -16,10 +16,19 @@ The name appears in the home page heading, every page title, and the top bar of 
 - `spirograph/`: Spirograph Maker, which draws hypotrochoids, epitrochoids and Lissajous figures. It exports SVG (one continuous path) and PNG and stores the settings in the page address.
 - `shop/`: the Custom String Art Guide storefront. Prices, delivery time and checkout links are set in the `SHOP` and `PAYMENT_LINKS` objects at the top of `shop/shop.js`. While a checkout link is empty, its button shows "Coming soon". The example images in `shop/examples/` were made with the String Art Maker.
 - `404.html`: the page shown for addresses that do not exist.
-- `images/`: the preview images on the home page.
+- `images/`: the preview images on the home page, and the link-preview images `og-*.png` (1200 × 630), one per page.
+- `sitemap.xml` and `robots.txt`: the page list for search engines. Add a line to `sitemap.xml` for each new page.
 - `fonts/Inter-latin-var.woff2`: the Inter typeface, Latin characters only. Its license is in `fonts/LICENSE-Inter-OFL.txt` (SIL Open Font License 1.1).
 - `favicon.svg`: the browser tab icon, a circle of nails with thread across it.
 - `CNAME`: the domain GitHub Pages serves the site at.
+
+## Search and link previews
+
+Each page's `<head>` has a title, description, canonical link, Open Graph and Twitter tags, and a JSON-LD block. Keep the title, `og:title` and `twitter:title` consistent, and the same for the descriptions. The shop's JSON-LD prices must match `SHOP` in `shop/shop.js`.
+
+## Domain
+
+Full URLs (canonical links, Open Graph and Twitter tags, JSON-LD, `sitemap.xml`, `robots.txt`) all start with `https://addisonkopplin.com`. To change the domain, replace that string in every file and update `CNAME`.
 
 ## Editing
 
