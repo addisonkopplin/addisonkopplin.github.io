@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Addison Kopplin · Mechanical Engineer</title>
-<meta name="description" content="Addison Kopplin, mechanical engineer. Integration and test for Starlink satellite sub-assemblies at SpaceX.">
-<meta property="og:title" content="Addison Kopplin · Mechanical Engineer">
-<meta property="og:description" content="Addison Kopplin, mechanical engineer. Integration and test for Starlink satellite sub-assemblies at SpaceX.">
+<title>Addison Kopplin · Projects</title>
+<meta name="description" content="Projects by Addison Kopplin, mechanical engineer: String Art Maker, Harmonograph Maker, and a fractal tree generator.">
+<meta property="og:title" content="Addison Kopplin · Projects">
+<meta property="og:description" content="Projects by Addison Kopplin, mechanical engineer: String Art Maker, Harmonograph Maker, and a fractal tree generator.">
 <meta property="og:url" content="https://addisonkopplin.com/">
-<meta property="og:type" content="profile">
+<meta property="og:type" content="website">
 <link rel="canonical" href="https://addisonkopplin.com/">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#ffffff">
@@ -30,37 +30,26 @@ header.top .inner{grid-column:2}
 h1{margin:0;color:var(--ink);font-weight:650;font-size:3rem;line-height:1.05;letter-spacing:-.032em}
 .title{margin:.6rem 0 0;font-size:1.25rem;color:var(--mute);letter-spacing:-.01em}
 .links{list-style:none;margin:1.75rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.4rem 1.75rem;font-size:.9375rem}
-.links .pdf{color:var(--accent);text-decoration-color:color-mix(in srgb,var(--accent) 35%,transparent)}
 section{display:grid;grid-template-columns:var(--label) minmax(0,1fr);column-gap:3rem;border-top:1px solid var(--rule);padding:2.25rem 0 2.5rem}
 section>h2{margin:.2rem 0 0;font-size:.75rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink)}
-.summary p{margin:0;font-size:1.0625rem;line-height:1.65;color:var(--body);max-width:40rem;text-wrap:pretty}
 .entry+.entry{margin-top:2.1rem}
 .eh{display:flex;justify-content:space-between;align-items:baseline;gap:1.5rem}
 h3{margin:0;font-size:1.0625rem;font-weight:600;color:var(--ink);letter-spacing:-.01em}
-.date{margin:0;flex:none;font-size:.875rem;color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+.date{margin:0;flex:none;font-size:.875rem;color:var(--mute);white-space:nowrap}
 .role{margin:.15rem 0 .55rem;color:var(--body);font-size:.9375rem}
-.loc{color:var(--mute)}.loc::before{content:"·";margin:0 .5em;color:#b0b0b0}
 ul{margin:0;padding:0 0 0 1.1rem;max-width:40rem}
 li{margin:.3rem 0;padding-left:.15rem;font-size:.9375rem;line-height:1.6;text-wrap:pretty}
 li::marker{color:#a0a0a0}
 .pbody{display:grid;grid-template-columns:minmax(0,1fr) 9.5rem;gap:2rem;align-items:start}
 .entry:not(.has-fig) .pbody{display:block}
 .pfig{margin:.35rem 0 0}
-.plink{margin:.7rem 0 0;font-size:.9375rem;font-weight:500}
-.plink a{color:var(--accent);text-decoration-color:color-mix(in srgb,var(--accent) 35%,transparent)}
 .pfig img{display:block;width:100%;height:auto}
 .pfig figcaption{margin-top:.5rem;font-size:.75rem;line-height:1.45;color:var(--mute)}
-dl{margin:0}
-.srow{display:grid;grid-template-columns:6.5rem 1fr;gap:1.5rem}
-.srow+.srow{margin-top:.6rem}
-dt{font-weight:600;color:var(--ink);font-size:.9375rem}
-dd{margin:0;font-size:.9375rem}
-.pub h3{max-width:38rem;line-height:1.4;text-wrap:balance}
-.pub .role{margin:.35rem 0 0}
-.pub strong{font-weight:600;color:var(--ink)}
-.nw{white-space:nowrap}
-.venue{margin:.1rem 0 0;font-size:.9375rem;color:var(--mute)}
-@media screen and (max-width:760px){
+.plink{margin:.7rem 0 0;font-size:.9375rem;font-weight:500}
+.plink a,.text a.go{color:var(--accent);text-decoration-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.text p{margin:0 0 .6rem;max-width:40rem;font-size:.9375rem;line-height:1.6}
+.text h3{margin-bottom:.2rem}
+@media (max-width:760px){
  .page{padding:3.5rem 1.375rem 3rem}
  header.top,section{grid-template-columns:1fr}
  header.top .inner{grid-column:1}
@@ -75,30 +64,6 @@ dd{margin:0;font-size:.9375rem}
  .role{margin-top:.1rem}
  .pbody{grid-template-columns:1fr;gap:1rem}
  .pfig{max-width:12rem}
- .srow{grid-template-columns:1fr;gap:.1rem}
-}
-@media print{
- @page{size:letter;margin:.5in .6in}
- :root{--label:6.5rem}
- body{font-size:9.5pt;line-height:1.4;color:#000}
- .page{max-width:none;padding:0}
- header.top{padding-bottom:.9rem}
- h1{font-size:22pt}
- .title{font-size:11pt;margin-top:.15rem}
- .links{margin-top:.5rem;font-size:8.5pt;gap:0 1.2rem}
- .links .pdf-item,.skip{display:none}
- .links a::after{content:" (" attr(data-print) ")";color:var(--mute)}
- a{color:#000;text-decoration:none}
- section{padding:.55rem 0 .65rem;column-gap:1.25rem}
- .summary p,li,.role,dd,dt,.venue{font-size:9.5pt}
- h3{font-size:10.5pt}
- .pfig figcaption{font-size:7pt}
- .pfig{max-width:1in}
- .entry+.entry{margin-top:.55rem}
- .entry{break-inside:avoid}
- li{margin:.05rem 0;line-height:1.38}
- .pbody{grid-template-columns:minmax(0,1fr) 1in;gap:1rem}
- .date a::after{content:none}
 }
 </style>
 </head>
@@ -107,58 +72,24 @@ dd{margin:0;font-size:.9375rem}
 <div class="page">
 <header class="top"><div class="inner">
 <h1>Addison Kopplin</h1>
-<p class="title">Mechanical Engineer</p>
+<p class="title">Mechanical engineer. Projects in code and hardware.</p>
 <ul class="links">
-<li><a href="https://github.com/addisonkopplin" rel="me" data-print="github.com/addisonkopplin">GitHub</a></li>
-<li><a href="https://www.linkedin.com/in/addisonkopplin" rel="me" data-print="linkedin.com/in/addisonkopplin">LinkedIn</a></li>
-<li class="pdf-item"><a href="/shop/">Shop</a></li>
-<li class="pdf-item"><a class="pdf" href="/Addison_Kopplin_Resume.pdf" download>Download resume (PDF)</a></li>
+<li><a href="https://github.com/addisonkopplin" rel="me">GitHub</a></li>
+<li><a href="https://www.linkedin.com/in/addisonkopplin" rel="me">LinkedIn</a></li>
+<li><a href="/shop/">Shop</a></li>
 </ul>
 </div></header>
 <main id="main">
-<section class="summary" aria-labelledby="h-sum"><h2 id="h-sum">Summary</h2><div><p>Mechanical engineer on the integration and test team for Starlink satellite bus and payload sub-assemblies at SpaceX. Earlier work includes wire harness design for utility-scale solar projects, PCB design, embedded control, and Simulink modeling. Led a team that designed and built a high-power rocket with active roll control.</p></div></section>
-<section aria-labelledby="h-exp"><h2 id="h-exp">Experience</h2><div>
-<article class="entry">
-<div class="eh"><h3>SpaceX (Starlink)</h3></div>
-<p class="role">Integration &amp; Test Specialist, Bus &amp; Payload Sub-Assemblies<span class="loc">Redmond, WA</span></p>
-<ul><li>Production support, test-failure triage, and process improvement for Starlink satellite bus and payload sub-assemblies.</li></ul>
-</article>
-<article class="entry">
-<div class="eh"><h3>Premier PV</h3></div>
-<p class="role">Design Engineer I</p>
-<ul><li>Designed wire harness systems for utility-scale solar projects from customer electrical drawings and CAD models.</li><li>Built internal engineering tools: Excel automation, design templates, and work instructions.</li><li>Coordinated UL standards compliance testing with external laboratories.</li><li>Produced BOMs, engineering drawings, and design submittals for manufacturing and installation.</li><li>Worked with procurement, production, and business teams to resolve supply chain issues, design changes, and manufacturing constraints.</li></ul>
-</article>
-<article class="entry">
-<div class="eh"><h3>Milwaukee School of Engineering</h3></div>
-<p class="role">Undergraduate Research Assistant</p>
-<ul><li>Designed, assembled, and soldered a PCB to replace a breadboard prototype.</li><li>Tuned Simulink models and validated controller performance against measured accelerometer and encoder data.</li><li>Built Simulink environments for control, simulation, and system monitoring.</li><li>Implemented a pick-and-place task that uses a webcam to detect objects and sort them by color.</li></ul>
-</article>
-<article class="entry">
-<div class="eh"><h3>ASME Design Competition</h3></div>
-<p class="role">Controls &amp; Electronics Engineer</p>
-<ul><li>Designed and built the complete electronics system for a solar-powered robot on a five-person team.</li><li>Designed power and switching circuits (voltage regulation, capacitor bank, MOSFETs, relays) to drive the motors and actuators.</li><li>Programmed an Arduino Nano with a Bluetooth module for remote control.</li><li>Integrated and controlled an electromagnet for payload handling.</li><li>Hand-assembled and soldered all electronics on a prototyping board. Supported system debugging and testing.</li></ul>
-</article>
-<article class="entry">
-<div class="eh"><h3>AirPro Fan and Blower Company</h3></div>
-<p class="role">Mechanical Engineer Intern</p>
-<ul><li>Developed a bearing selection tool that helps engineers find bearings faster.</li><li>Measured air speed in a duct to verify blower performance.</li><li>Corrected SOLIDWORKS models and rebuilt assemblies for product models and drawings.</li></ul>
-</article>
-<article class="entry">
-<div class="eh"><h3>Rocket Design Competition</h3></div>
-<p class="role">Team Lead</p>
-<ul><li>Led design and fabrication of a high-power rocket for the Wisconsin Space Grant Consortium competition.</li><li>Designed an active roll control system using a reaction wheel and a PID controller.</li><li>Simulated flight dynamics and analyzed flight data to guide design decisions.</li><li>Wrote technical documentation and engineering reports.</li></ul>
-</article>
-</div></section>
-<section aria-labelledby="h-pub"><h2 id="h-pub">Publications</h2><div>
-<article class="entry pub"><h3>System Modeling and Control of a Five-Bar Mechanism with Variable Topology for Control Systems Education</h3>
-<p class="role"><span class="nw">L. A. Rodriguez</span>, <strong class="nw">A. Kopplin</strong>, <span class="nw">B. J. Slaboch</span>, <span class="nw">T. Vaculik</span></p>
-<p class="venue">Proceedings of the American Control Conference, pp. 2181–2188.</p></article>
-</div></section>
 <section aria-labelledby="h-prj"><h2 id="h-prj">Projects</h2><div>
 <article class="entry has-fig">
-<div class="eh"><h3>String art generator</h3><p class="date"><a href="https://github.com/addisonkopplin/string_art">string_art on GitHub</a></p></div>
-<p class="role">Python, NumPy</p>
-<div class="pbody"><div><ul><li>Converts a photo into string art: one thread wound between nails spaced evenly around a circle.</li><li>At each step, the program picks the straight line between two nails that crosses the darkest part of the image. It then lightens those pixels so that later lines cover other areas.</li><li>The output is the order in which to wind the thread around the nails.</li><li>The image shows a portrait of Albert Einstein made from 5,000 lines on 288 nails.</li></ul><p class="plink"><a href="/string-art/">Try it in your browser</a></p></div><figure class="pfig"><img src="images/string-art-einstein.jpg" width="400" height="400" alt="String art portrait of Albert Einstein sticking out his tongue, drawn with 5,000 straight black lines inside a circle" loading="lazy" decoding="async"><figcaption>Source photo: Arthur Sasse, public domain.</figcaption></figure></div>
+<div class="eh"><h3>String Art Maker</h3><p class="date"><a href="https://github.com/addisonkopplin/string_art">string_art on GitHub</a></p></div>
+<p class="role">Python, NumPy, JavaScript</p>
+<div class="pbody"><div><ul><li>Converts a photo into string art: one thread wound between nails spaced evenly around a circle.</li><li>At each step, the program picks the straight line between two nails that crosses the darkest part of the image. It then lightens those pixels so that later lines cover other areas.</li><li>The browser version shows the result as it is drawn and prints a numbered nail template and the winding sequence.</li><li>The image shows a portrait of Albert Einstein made from 5,000 lines on 288 nails.</li></ul><p class="plink"><a href="/string-art/">Try it in your browser</a></p></div><figure class="pfig"><img src="images/string-art-einstein.jpg" width="400" height="400" alt="String art portrait of Albert Einstein sticking out his tongue, drawn with 5,000 straight black lines inside a circle" loading="lazy" decoding="async"><figcaption>Source photo: Arthur Sasse, public domain.</figcaption></figure></div>
+</article>
+<article class="entry">
+<div class="eh"><h3>Harmonograph Maker</h3></div>
+<p class="role">JavaScript, Canvas, SVG</p>
+<div class="pbody"><div><ul><li>Simulates a harmonograph: a machine in which swinging pendulums move a pen across paper.</li><li>Sliders set the frequency, phase, amplitude, and damping of up to three pendulums. The page draws the resulting curve.</li><li>Exports the drawing as SVG for pen plotters and laser cutters, or as PNG. The page address stores the settings, so a link reopens the same drawing.</li></ul><p class="plink"><a href="/harmonograph/">Try it in your browser</a></p></div></div>
 </article>
 <article class="entry">
 <div class="eh"><h3>Fractal tree</h3><p class="date"><a href="https://github.com/addisonkopplin/fractal_tree">fractal_tree on GitHub</a></p></div>
@@ -166,15 +97,11 @@ dd{margin:0;font-size:.9375rem}
 <div class="pbody"><div><ul><li>Draws a tree in which every branch splits into two smaller branches.</li><li>Each new branch turns 30° left or right and is 0.67 times the length of the branch before it. The tree has 10 levels.</li></ul></div></div>
 </article>
 </div></section>
-<section aria-labelledby="h-edu"><h2 id="h-edu">Education</h2><div>
-<article class="entry"><div class="eh"><h3>Milwaukee School of Engineering</h3></div>
-<p class="role">Bachelor of Science in Mechanical Engineering</p></article>
+<section aria-labelledby="h-shop"><h2 id="h-shop">Shop</h2><div class="text">
+<h3>Custom String Art Guide</h3>
+<p>A photo of your choice, turned into a print-ready guide for building string art: a full-size numbered nail template, the winding sequence, and a preview image.</p>
+<p><a class="go" href="/shop/">Visit the shop</a></p>
 </div></section>
-<section aria-labelledby="h-skl"><h2 id="h-skl">Skills</h2><div><dl>
-<div class="srow"><dt>Software</dt><dd>SolidWorks, AutoCAD, Inventor, MATLAB, Simulink, Python, C++ (Arduino), Linux</dd></div>
-<div class="srow"><dt>Hardware</dt><dd>Multimeter, soldering, assembly, sensors and data acquisition, 3D printing, PDM/ERP</dd></div>
-<div class="srow"><dt>Practice</dt><dd>Troubleshooting, data processing, cross-functional coordination, creating and interpreting engineering documentation</dd></div>
-</dl></div></section>
 </main>
 </div>
 </body>
