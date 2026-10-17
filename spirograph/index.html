@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Spirograph &amp; Lissajous Curve Generator, SVG for Pen Plotters | String &amp; Pendulum</title>
+<title>Spirograph &amp; Lissajous Curve Generator, SVG for Pen Plotters | Workbench</title>
 <meta name="description" content="Free online spirograph: draw hypotrochoids, epitrochoids and Lissajous figures, then download one continuous line as SVG for a pen plotter, or a PNG.">
 <link rel="canonical" href="https://addisonkopplin.com/spirograph/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="String &amp; Pendulum">
+<meta property="og:site_name" content="Workbench">
 <meta property="og:title" content="Spirograph &amp; Lissajous Curve Generator, SVG for Pen Plotters">
 <meta property="og:description" content="Free online spirograph: draw hypotrochoids, epitrochoids and Lissajous figures, then download one continuous line as SVG for a pen plotter, or a PNG.">
 <meta property="og:url" content="https://addisonkopplin.com/spirograph/">
@@ -23,9 +23,12 @@
 <meta name="twitter:image:alt" content="Spirograph Maker: one fine black line forming a round rosette of overlapping loops">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fonts/Inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="/site.css">
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -44,21 +47,35 @@
  },
  "publisher": {
   "@type": "Organization",
-  "name": "String & Pendulum",
+  "name": "Workbench",
   "url": "https://addisonkopplin.com/"
  }
 }
 </script>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
+<!-- nav:start -->
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="site-bar">
+<a class="site-name" href="/">Workbench</a>
+<nav class="site-nav" aria-label="Main">
+<ul>
+<li><a href="/string-art/">String Art</a></li>
+<li><a href="/harmonograph/">Harmonograph</a></li>
+<li><a href="/spirograph/" aria-current="page">Spirograph</a></li>
+<li><a href="/prices/">Prices</a></li>
+</ul>
+</nav>
+</div>
+</header>
+<!-- nav:end -->
 <div class="app">
 <div class="page">
-<header class="top">
-  <nav class="nav" aria-label="Site"><a class="home" href="/">String &amp; Pendulum</a><span><a href="/string-art/">String Art Maker</a><a href="/harmonograph/">Harmonograph</a><a href="/spirograph/" aria-current="page">Spirograph</a><a href="/prices/">Prices</a><a href="/shop/">Shop</a></span></nav>
+<div class="top">
   <h1>Spirograph Maker</h1>
   <p class="lead">A spirograph draws with a pen held in a small wheel that rolls around inside or outside a fixed ring. This page computes those curves, and Lissajous figures, which combine two perpendicular sine waves. Download the drawing as SVG for a pen plotter or laser cutter, or as PNG.</p>
-</header>
+</div>
 
 <main id="main">
 <div class="tool">
@@ -149,6 +166,22 @@
 </main>
 </div>
 </div>
+<!-- footer:start -->
+<footer class="site-footer">
+<div class="site-bar">
+<a class="site-name" href="/">Workbench</a>
+<nav class="foot-nav" aria-label="Footer">
+<ul>
+<li><a href="/string-art/">String Art</a></li>
+<li><a href="/harmonograph/">Harmonograph</a></li>
+<li><a href="/spirograph/" aria-current="page">Spirograph</a></li>
+<li><a href="/prices/">Prices</a></li>
+<li><a href="/shop/">Shop</a></li>
+</ul>
+</nav>
+</div>
+</footer>
+<!-- footer:end -->
 <div id="printout" class="printout" aria-hidden="true"></div>
 <script src="app.js"></script>
 </body>
