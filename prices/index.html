@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Prices vs. Inflation Calculator by Category | String &amp; Pendulum</title>
+<title>Prices vs. Inflation Calculator by Category | Workbench</title>
 <meta name="description" content="Free inflation calculator by category: see how prices for rent, groceries, auto repair, childcare and 28 more have changed since any year, with BLS data.">
 <link rel="canonical" href="https://addisonkopplin.com/prices/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="String &amp; Pendulum">
+<meta property="og:site_name" content="Workbench">
 <meta property="og:title" content="Prices vs. Inflation Calculator by Category">
 <meta property="og:description" content="Free inflation calculator by category: see how prices for rent, groceries, auto repair, childcare and 28 more have changed since any year, with BLS data.">
 <meta property="og:url" content="https://addisonkopplin.com/prices/">
@@ -23,9 +23,12 @@
 <meta name="twitter:image:alt" content="Prices vs. Inflation: line chart of auto repair prices up 57% since September 2019, against 31% for overall prices">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fonts/Inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="/site.css">
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -44,21 +47,35 @@
  },
  "publisher": {
   "@type": "Organization",
-  "name": "String & Pendulum",
+  "name": "Workbench",
   "url": "https://addisonkopplin.com/"
  }
 }
 </script>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
+<!-- nav:start -->
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="site-bar">
+<a class="site-name" href="/">Workbench</a>
+<nav class="site-nav" aria-label="Main">
+<ul>
+<li><a href="/string-art/">String Art</a></li>
+<li><a href="/harmonograph/">Harmonograph</a></li>
+<li><a href="/spirograph/">Spirograph</a></li>
+<li><a href="/prices/" aria-current="page">Prices</a></li>
+</ul>
+</nav>
+</div>
+</header>
+<!-- nav:end -->
 <div class="app">
 <div class="page">
-<header class="top">
-  <nav class="nav" aria-label="Site"><a class="home" href="/">String &amp; Pendulum</a><span><a href="/string-art/">String Art Maker</a><a href="/harmonograph/">Harmonograph</a><a href="/spirograph/">Spirograph</a><a href="/prices/" aria-current="page">Prices</a><a href="/shop/">Shop</a></span></nav>
+<div class="top">
   <h1>Prices vs. Inflation</h1>
   <p class="lead">Pick something you pay for and a starting year. The chart shows how much its price has changed since then, next to the change in overall prices. The figures are official price indexes from the U.S. Bureau of Labor Statistics.</p>
-</header>
+</div>
 
 <main id="main">
 <div class="tool">
@@ -113,6 +130,22 @@
 </main>
 </div>
 </div>
+<!-- footer:start -->
+<footer class="site-footer">
+<div class="site-bar">
+<a class="site-name" href="/">Workbench</a>
+<nav class="foot-nav" aria-label="Footer">
+<ul>
+<li><a href="/string-art/">String Art</a></li>
+<li><a href="/harmonograph/">Harmonograph</a></li>
+<li><a href="/spirograph/">Spirograph</a></li>
+<li><a href="/prices/" aria-current="page">Prices</a></li>
+<li><a href="/shop/">Shop</a></li>
+</ul>
+</nav>
+</div>
+</footer>
+<!-- footer:end -->
 <script src="app.js"></script>
 </body>
 </html>
