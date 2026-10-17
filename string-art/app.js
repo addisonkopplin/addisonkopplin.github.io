@@ -384,7 +384,7 @@
     $('run').textContent = 'Making string art…'; $('run').disabled = true; $('auto').disabled = true;
     S.running = true;
     setTimeout(() => {
-      const d = photoPixels(w, h);
+      const d = photoPixels(w, h), [ew, eh] = SA.workSize(A, SA.auto.EVAL), ed = photoPixels(ew, eh);
       const R = S.result = { key: frameKey(), shape: F.shape, A, lay, frameMM, nails: n, lines: L, strength: STRENGTH, mode, light, board: c.board, boardKey: C.board, finished: false,
         threads: c.threads.map((col, i) => ({ color: col, code: C.threads[i], order: null, count: 0 })), blocks: null, switches: 0, bi: 0, bk: 0, drawn: 0 };
       resizeOut(); paintBoard(octx, out.width, out.height, R);
@@ -405,7 +405,7 @@
       };
       wk.onerror = () => { setStatus('The calculation stopped because of an error. Try fewer nails or lines.'); cancelAnimationFrame(raf); stop(); };
       wk.postMessage({ type: 'joint', w, h, nails: n, nx: NX, ny: NY, edge: lay.edge, skip: SA.skipFor(n), d: d.buffer, shape: F.shape,
-        threads: c.threads, board: c.board, maxLines: L, frameMM }, [d.buffer]);
+        threads: c.threads, board: c.board, maxLines: L, frameMM, A, ed: ed.buffer, ew, eh }, [d.buffer, ed.buffer]);
       if (window.matchMedia('(max-width: 860px)').matches) $('h-res').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 30);
   }
@@ -420,7 +420,7 @@
     R.threads = R.threads.filter((_, i) => keep[i]);
     const bl = [];
     R.blocks.filter((b) => keep[b[0]]).forEach((b) => { const t = idx[b[0]], p = bl[bl.length - 1]; if (p && p[0] === t && p[2] === b[1]) p[2] = b[2]; else bl.push([t, b[1], b[2]]); });
-    R.blocks = bl; R.switches = Math.max(0, bl.length - R.threads.length);
+    R.blocks = bl; R.switches = Math.max(0, bl.length - 1);
     C.threads = C.threads.filter((c) => !drop.some((t) => t.code === c)); $('palette').value = 'custom'; renderThreads();
     return drop;
   }
@@ -448,7 +448,8 @@
     const multi = R.threads.length > 1;
     setStatus('Finished: ' + fmt(R.lines) + ' lines on ' + fmt(R.nails) + ' nails' + (multi ? ', ' + R.threads.length + ' threads in ' + fmt(R.blocks.length) + ' turns' : '') +
       '. Calculated in ' + (timing.totalMs / 1000).toFixed(1) + ' s.' +
-      (R.lines + drop.reduce((p, t) => p + t.count, 0) < asked ? ' It stopped before ' + fmt(asked) + ' lines: no further line brings the image closer to the photo.' : '') +
+      (timing.cut ? ' It stopped at ' + fmt(timing.cut.to) + ' of ' + fmt(timing.cut.from) + ' lines: more lines did not look closer to the photo from a distance.'
+        : R.lines + drop.reduce((p, t) => p + t.count, 0) < asked ? ' It stopped before ' + fmt(asked) + ' lines: no further line brings the image closer to the photo.' : '') +
       (drop.length ? ' Removed ' + drop.map((t) => dmcLabel(t.code)).join(' and ') + ': under 3% of the lines.' : ''));
     if (S.onFinish) { const f = S.onFinish; S.onFinish = null; f(R); }
     document.body.dataset.state = 'done';

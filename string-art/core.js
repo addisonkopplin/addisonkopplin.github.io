@@ -352,8 +352,29 @@
     const cov = (i, j) => { const dx = NX[j] - NX[i], dy = NY[j] - NY[i], L = Math.max(Math.abs(dx), Math.abs(dy)); return L ? Math.min(1, c0 * Math.hypot(dx, dy) / L) : 0; };
     const used = threads.map(() => new Uint8Array(offs.length));
     const cur = threads.map(() => o.start || 0), prev = threads.map(() => -1);
-    const orders = threads.map(() => [cur[0]]), blocks = [];
-    // best line from thread t's current nail: [error change, nail, pair]
+    const orders = threads.map((_, t) => [cur[t]]), blocks = [];
+    // Each thread ties on at its best starting nail: its first line is the best line anywhere
+    // (o.start: a fixed first nail for every thread instead).
+    const started = new Uint8Array(K); if (o.start != null) started.fill(1);
+    const lineD = (t, i, j, pr) => {
+      const a = offs[pr], b = offs[pr + 1]; if (a === b) return 0;
+      const Lr = Lt[t], Qr = Qt[t]; let sl = 0, sq = 0;
+      for (let k = a; k < b; k++) { const p = pix[k]; sl += Lr[p]; sq += Qr[p]; }
+      const wv = cov(i, j); return wv * sl + wv * wv * sq;
+    };
+    function bestAnywhere(t) {
+      let bd = 0, bj = -1, bp = 0, bs = 0;
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+        const pr = rowStart[i] + (j - i - 1), dlt = lineD(t, i, j, pr);
+        if (dlt < bd) { bd = dlt; bj = j; bp = pr; bs = i; }
+      }
+      return [bd, bj, bp, bs];
+    }
+    // best line from thread t's current nail: [error change, nail, pair, start nail]
+    // A thread not started yet competes with its best line from nail 0, as if tied on there (this
+    // keeps the order in which threads come in, which matters as later lines lie on top); when it
+    // is picked, its first line is the best line anywhere, and it ties on at that line's start.
+    let total = 0;
     function bestFrom(t) {
       const c = cur[t], rc = rowStart[c], Lr = Lt[t], Qr = Qt[t], us = used[t];
       let bd = 0, bj = -1, bp = 0;
@@ -367,9 +388,10 @@
         const wv = cov(c, j), dlt = wv * sl + wv * wv * sq;
         if (dlt < bd) { bd = dlt; bj = j; bp = pr; }
       }
-      return [bd, bj, bp];
+      return [bd, bj, bp, c];
     }
-    function place(t, j, pr) {
+    function place(t, j, pr, s) {
+      if (!started[t]) { started[t] = 1; cur[t] = s; orders[t][0] = s; }
       const a = offs[pr], b = offs[pr + 1], wv = cov(cur[t], j), tc = tau[t];
       for (let k = a; k < b; k++) {
         const i = pix[k], g = cell[i], e1 = e[1][i], e2 = e[2][i];
@@ -383,7 +405,7 @@
     // o.switchPenalty p: another thread takes over only if its best line is (1 + p) times better.
     // o.layered: each thread is finished before the next starts (no return to a finished thread).
     const pen = o.switchPenalty || 0, layered = !!o.layered, closed = new Uint8Array(K), every = o.checkEvery || 8;
-    let total = 0, ct = -1, blockStart = 0, blockLen = 0, switches = 0;
+    let ct = -1, blockStart = 0, blockLen = 0, switches = 0;
     const closeBlock = () => { if (ct >= 0 && orders[ct].length - 1 > blockStart) blocks.push([ct, blockStart, orders[ct].length - 1]); };
     while (total < maxLines) {
       if (total && total % refresh === 0) { refreshF(); for (let i = 0; i < N; i++) upd(i); }
@@ -398,10 +420,11 @@
           if (r[1] >= 0 && r[0] < own && (!pick || pick[0] === ct || r[0] < pick[1][0])) pick = [t, r];
         }
       }
+      if (pick && !started[pick[0]]) { const r = bestAnywhere(pick[0]); if (r[1] >= 0) pick = [pick[0], r]; }
       if (!pick) break;   // no line lowers the error
-      const [t, [, j, pr]] = pick;
+      const [t, [, j, pr, s0]] = pick;
       if (t !== ct) { closeBlock(); if (ct >= 0) switches++; ct = t; blockStart = orders[t].length - 1; blockLen = 0; }
-      place(t, j, pr); total++; blockLen++;
+      place(t, j, pr, s0); total++; blockLen++;
       if (o.stop && o.stop(total, { orders, blocks: blocks.concat([[ct, blockStart, orders[ct].length - 1]]) })) break;
     }
     closeBlock();
@@ -530,6 +553,7 @@
   }
   SA.blur = gaussN;
   const CW = 1;   // weight of color (a, b) differences when fitting palettes
+  SA.HUE_FIT = 0; // default weight of the hue-mix distance when fitting palettes (the search also fits with AUTO.HUE_FIT)
   /* Match score: how the finished piece looks from a normal viewing distance compared with the
      photo. The piece is drawn at the real thread width (SA.render with frameMM) and both images
      are seen as the eye sees them from the viewing distance (S-CIELAB filters, Zhang & Wandell
@@ -541,9 +565,32 @@
                width). Unaffected by overall lightness and contrast, so it measures whether
                features such as eyes and edges are drawn.
        ssim, ssimC  structural similarity of L* and of a*, b* (computed only if weighted)
-     score = 0.5 de + 1 dab + 60 (1 - detail); lower is better. The weights were tuned on a set
-     of results with a known quality order (sa-bench/ranking). */
-  SA.scoreWeights = { de: 0.5, ab: 1, d: 60, l: 0, c: 0 };
+       hue     how far the result's mix of hues is from the photo's: chroma-weighted hue
+               histograms (12 bins), half their L1 distance after normalising, times the photo's
+               mean chroma. A result with almost no color counts as an even spread of hues.
+               This keeps the photo's key hues (blue sky, red balloon) in the chosen palette.
+     score = 0.5 de + 1 dab + 120 (1 - detail) + 3 hue; lower is better. The same weights as the
+     bench's physical score, tuned on a set of results with a known quality order
+     (sa-bench/ranking, including pairs where a palette drops a key hue). */
+  SA.scoreWeights = { de: 0.5, ab: 1, d: 120, hue: 3, l: 0, c: 0 };
+  const NB = 12;
+  function hueHist(A, Bb, T) {   // chroma per pixel, by hue, soft-binned
+    const H = new Float64Array(NB), ins = T.ins;
+    for (let i = 0; i < A.length; i++) if (ins[i]) {
+      const a = A[i], b = Bb[i], C = Math.sqrt(a * a + b * b); if (C < 1e-6) continue;
+      let h = Math.atan2(b, a) / (2 * Math.PI) * NB; h = ((h % NB) + NB) % NB;
+      const i0 = Math.floor(h), f = h - i0;
+      H[i0 % NB] += C * (1 - f); H[(i0 + 1) % NB] += C * f;
+    }
+    for (let k = 0; k < NB; k++) H[k] /= T.cnt;
+    return H;
+  }
+  function hueDist(hp, hr) {
+    let sp = 0, sr = 0; for (let k = 0; k < NB; k++) { sp += hp[k]; sr += hr[k]; }
+    if (sp <= 0) return 0;
+    let d = 0; for (let k = 0; k < NB; k++) d += Math.abs(hp[k] / sp - (hr[k] + 1 / NB) / (sr + 1));
+    return 0.5 * d * sp;
+  }
   const XN = 0.95047, ZN = 1.08883;
   // [FWHM in degrees, weight] for the lightness, red-green and blue-yellow channels
   const SCIELAB = [[[0.05, 1.00327], [0.225, 0.114416], [7.0, -0.117686]], [[0.0685, 0.616725], [0.826, 0.383275]], [[0.092, 0.567885], [0.6451, 0.432115]]];
@@ -626,6 +673,7 @@
     // colorfulness: mean chroma C* of the photo inside the frame
     let c = 0; for (let i = 0; i < N; i++) if (ins[i]) c += Math.hypot(T.lab[1][i], T.lab[2][i]);
     T.chroma = c / cnt;
+    T.hue = hueHist(T.lab[1], T.lab[2], T);
     return T;
   };
   /* ch: sRGB channels of SA.render(..., frameMM) at the target size. */
@@ -640,8 +688,9 @@
     const detail = ncc(T.band, band(R[0], T), T), W_ = SA.scoreWeights;
     const ssimL = W_.l || SA.SCORE_ALL ? ssim(T.stL, R[0], T) : null;
     const ssimC = W_.c || SA.SCORE_ALL ? (ssim(T.stC[0], R[1], T) + ssim(T.stC[1], R[2], T)) / 2 : null;
-    const score = W_.de * de + W_.ab * dab + W_.d * (1 - detail) + (W_.l ? W_.l * (1 - ssimL) : 0) + (W_.c ? W_.c * (1 - ssimC) : 0);
-    return { score, de, dab, detail, ssim: ssimL, ssimC };
+    const hue = hueDist(T.hue, hueHist(R[1], R[2], T));
+    const score = W_.de * de + W_.ab * dab + W_.d * (1 - detail) + W_.hue * hue + (W_.l ? W_.l * (1 - ssimL) : 0) + (W_.c ? W_.c * (1 - ssimC) : 0);
+    return { score, de, dab, detail, hue, ssim: ssimL, ssimC };
   };
   /* Score of a finished result, as Find best settings scores it.
      o: {photo(w, h) -> RGBA, shape, A, lay, orders, counts, threads (hex), board (hex), strength, frameMM} */
@@ -659,7 +708,8 @@
      added one at a time, each time the floss that lowers the mean CIELAB difference most, then
      each thread is swapped for a better one if there is one.
      dmc: [[code, name, hex], ...]; boards: {key: hex}. Returns [{board, threads:[codes], err}]. */
-  SA.fitPalettes = function (d, inside, dmc, boards, maxK) {
+  SA.fitPalettes = function (d, inside, dmc, boards, maxK, cw, hueW) {
+    const CWf = cw || CW;
     const [lo, hi] = SA.levels(d, inside), bins = new Map();
     for (let i = 0; i < inside.length; i++) {
       if (!inside[i]) continue;
@@ -681,7 +731,18 @@
     all.filter((c) => c.code === 'B5200' || c.code === '310').forEach((c) => near.add(c));
     const cand = [...near];
     const a = new Float64Array(3), r = [0, 0, 0], q = [0, 0, 0];
-    function err(B, set) {
+    // hue mix of the photo colors (chroma-weighted, 12 bins), to keep the photo's key hues: the
+    // fit error adds HUE_FIT x the distance of the mixes' hue mix from it (as in SA.score)
+    const binInto = (H, A, Bv, wgt) => {
+      const C = Math.sqrt(A * A + Bv * Bv); if (C < 1e-6) return;
+      let h = Math.atan2(Bv, A) / (2 * Math.PI) * NB; h = ((h % NB) + NB) % NB;
+      const i0 = Math.floor(h), f = h - i0; H[i0 % NB] += wgt * C * (1 - f); H[(i0 + 1) % NB] += wgt * C * f;
+    };
+    const Hp = new Float64Array(NB); for (const p of pts) binInto(Hp, p.lab[1], p.lab[2], p.w);
+    const Hm = new Float64Array(NB), hw0 = hueW == null ? SA.HUE_FIT : hueW;
+    function err(B, set, hwx) {
+      const hw = hwx == null ? hw0 : hwx;
+      Hm.fill(0);
       const D = set.map((s) => [s.l[0] - B[0], s.l[1] - B[1], s.l[2] - B[2]]);
       let tr = 0; for (const x of D) tr += x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
       const eta = 1 / Math.max(tr, 1e-6), aa = a.subarray(0, D.length);
@@ -693,9 +754,13 @@
         X = ft((0.4124 * m[0] + 0.3576 * m[1] + 0.1805 * m[2]) / 0.95047); Y = ft(0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]); Z = ft((0.0193 * m[0] + 0.1192 * m[1] + 0.9505 * m[2]) / 1.08883);
         q[0] = 116 * Y - 16; q[1] = 500 * (X - Y); q[2] = 200 * (Y - Z);
         const x = q[0] - p.lab[0], y = q[1] - p.lab[1], z = q[2] - p.lab[2];
-        e += p.w * Math.sqrt(x * x + CW * CW * (y * y + z * z));
+        e += p.w * Math.sqrt(x * x + CWf * CWf * (y * y + z * z));
+        if (hw) binInto(Hm, q[1], q[2], p.w);
       }
-      return e / wsum;
+      if (!hw) return e / wsum;
+      let sp = 0, sm = 0, d = 0; for (let k = 0; k < NB; k++) { sp += Hp[k]; sm += Hm[k]; }
+      if (sp > 0) for (let k = 0; k < NB; k++) d += Math.abs(Hp[k] / sp - (Hm[k] + wsum / NB) / (sm + wsum));
+      return e / wsum + hw * 0.5 * d * sp / wsum;
     }
     const out = [];
     for (const bk of Object.keys(boards)) {
@@ -714,10 +779,30 @@
             if (e < be - 1e-6) { be = e; set = t; }
           }
         }
-        out.push({ board: bk, threads: set.map((c) => c.code), err: be });
+        // errH: the error with hue weight 1, the same for every fit, to order the candidates
+        out.push({ board: bk, threads: set.map((c) => c.code), err: be, hue: hw0, errH: err(B, set, 1) });
       }
+      // Key-hue palettes (white board, with the hue fit): a dark, a mid and a light thread built
+      // from the photo's own tones and its main hue, as a painter would choose them, and a second
+      // one with the second main hue instead of the light thread.
+      if (bk === 'white' && hw0 > 0 && maxK >= 3) keyHue(pool).forEach((set) => { if (new Set(set).size === 3) out.push({ board: bk, threads: set.map((c) => c.code), err: err(B, set), hue: 'key', errH: err(B, set, 1) }); });
     }
     return out;
+    function keyHue(pool) {
+      const mean = (sel) => { let w = 0; const m = [0, 0, 0]; for (const p of sel) { w += p.w; for (let k = 0; k < 3; k++) m[k] += p.w * p.lab[k]; } return w ? m.map((v) => v / w) : null; };
+      // nearest floss, with a and b counted twice so that the hue is kept
+      const nearest = (lab) => { let b = null, bd = Infinity; for (const c of all) { const d = (c.lab[0] - lab[0]) ** 2 + 4 * ((c.lab[1] - lab[1]) ** 2 + (c.lab[2] - lab[2]) ** 2); if (d < bd) { bd = d; b = c; } } return b; };
+      const H = Hp.slice(), hues = [];
+      for (let r = 0; r < 2; r++) { let k = 0; for (let i = 1; i < NB; i++) if (H[i] > H[k]) k = i; if (H[k] <= 0) break; hues.push(k); H[k] = H[(k + 1) % NB] = H[(k + NB - 1) % NB] = 0; }
+      const binOf = (p) => { let h = Math.atan2(p.lab[2], p.lab[1]) / (2 * Math.PI) * NB; return Math.round(((h % NB) + NB) % NB) % NB; };
+      const ofHue = (k) => mean(pts.filter((p) => Math.hypot(p.lab[1], p.lab[2]) > 12 && Math.abs(((binOf(p) - k + NB + NB / 2) % NB) - NB / 2) <= 1));
+      const dark = mean(pts.filter((p) => p.lab[0] < 35)), light = mean(pts.filter((p) => p.lab[0] > 75));
+      const h1 = hues.length ? ofHue(hues[0]) : null, h2 = hues.length > 1 ? ofHue(hues[1]) : null;
+      const out = [];
+      if (dark && h1 && light) out.push([nearest(dark), nearest(h1), nearest(light)]);
+      if (dark && h1 && h2) out.push([nearest(dark), nearest(h1), nearest(h2)]);
+      return out;
+    }
   };
 
 
@@ -730,7 +815,9 @@
     LINES: [200, 6000],    // line count range, as on the Lines slider
     STRENGTH: [3, 60],     // thread strength range, as on the slider
     TOL: 0.01,             // a simpler setup is chosen if it scores within 1% of the best
-    BOARD_MARGIN: 0.03,    // a grey or wood board must score 3% better than white or black, with no less detail
+    HUE_TOL: 0,            // among setups within this share of the best, those that keep the hues best win (off: it chose worse)
+    HUE_FIT: 1,            // hue weight of the second palette fit for white and black boards
+    BOARD_MARGIN: 0.08,    // a grey or wood board must score 8% better than white or black, with no less detail
     FIRST: 80,             // working size (pixels along the longer side) of the first pass
     COARSE: 120,           // working size of the later passes
     EVAL: 120,             // size of the images compared with the photo
@@ -782,7 +869,7 @@
       // threads with under 3% of the lines are left out of the result, and do not count
       const keep = cnt.map((c) => c >= AUTO.MIN_SHARE * total), kc = cnt.map((c, i) => (keep[i] ? c : 0));
       const sc = SA.score(SA.render(T.w, T.h, lay, orders, kc, job.threads, job.board, 0, ctx.frameMM, fl.blocks), T);
-      const res = { L: total, used: total, score: sc.score, de: sc.de, dab: sc.dab, detail: sc.detail, keep, k: keep.filter(Boolean).length, cnt };
+      const res = { L: total, used: total, score: sc.score, de: sc.de, dab: sc.dab, detail: sc.detail, hue: sc.hue, keep, k: keep.filter(Boolean).length, cnt };
       worse = last && res.score > last.score ? worse + 1 : 0;
       results.push(res); last = res;
     };
@@ -813,15 +900,26 @@
     // in order of priority (a slow device may only get through the first few): black on white,
     // the fitted three threads and pair on white, the current colors, the other presets, then the
     // fitted three threads on each other board
-    const rank = (f) => (f.board === 'white' ? 0 : f.board === 'black' ? 1 : 2), by = (a, b) => rank(a) - rank(b) || a.err - b.err;
+    // Fits come with and without the hue term (f.hue); errH (fit error with hue weight 1) orders
+    // them, so the fits that keep the photo's key hues come first.
+    const rank = (f) => (f.board === 'white' ? 0 : f.board === 'black' ? 1 : 2), by = (a, b) => rank(a) - rank(b) || a.errH - b.errH;
     const f3 = fits.filter((f) => f.threads.length === 3).sort(by), f2 = fits.filter((f) => f.threads.length === 2).sort(by);
-    add(presets[0]); f3.slice(0, 1).forEach(add); f2.slice(0, 1).forEach(add);
-    add(current); presets.slice(1).forEach(add); f3.slice(1).forEach(add);
+    const white = (f) => f.board === 'white';
+    add(presets[0]);
+    // white board: the fitted threes and pairs, best first (each kind of fit once)
+    const w = f3.filter(white).concat(f2.filter(white)).sort((a, b) => a.errH - b.errH);
+    w.forEach(add);
+    add(current); add(presets[1]);
+    // black board: the fitted three threads (with and without the hue term); grey and wood
+    // boards only when there is time (they are rarely chosen: see BOARD_MARGIN)
+    f3.filter((f) => f.board === 'black').forEach(add);
+    f3.filter((f) => !plain(f.board)).sort((a, b) => a.errH - b.errH).slice(0, 1).forEach(add);
     return out;
   };
   const plain = (b) => b === 'white' || b === 'black';
   /* Final choice: the lowest score. A grey or wood board is only chosen if it beats the best
-     white or black board result by BOARD_MARGIN and shows at least as much detail. A setup with
+     white or black board result by BOARD_MARGIN, with and without the hue term, and shows at
+     least as much detail. A setup with
      fewer threads, then fewer lines, then fewer nails is preferred if it scores within TOL. */
   AUTO.choose = function (rs, palettes) {
     let all = [];
@@ -830,12 +928,19 @@
     const P = all.filter((x) => plain(boardOf(x)));
     if (P.length) {
       const bp = P.reduce((a, b) => (b.score < a.score ? b : a));
-      all = all.filter((x) => plain(boardOf(x)) || (x.score < bp.score * (1 - AUTO.BOARD_MARGIN) && x.detail >= bp.detail));
+      // the margin also holds without the hue term: a colored board adds its own hue everywhere,
+      // which the hue term alone would reward
+      const nh = (x) => x.score - SA.scoreWeights.hue * (x.hue || 0);
+      all = all.filter((x) => plain(boardOf(x)) || (x.score < bp.score * (1 - AUTO.BOARD_MARGIN) && nh(x) < nh(bp) * (1 - AUTO.BOARD_MARGIN) && x.detail >= bp.detail));
     }
+    // near ties (within HUE_TOL) go to the setups that keep the photo's hues best
+    const lo0 = Math.min(...all.map((x) => x.score)), near = all.filter((x) => x.score <= lo0 * (1 + AUTO.HUE_TOL));
+    const hmin = Math.min(...near.map((x) => x.hue || 0));
+    all = near.filter((x) => (x.hue || 0) <= hmin + 1);
     const lo = Math.min(...all.map((x) => x.score));
     const ok = all.filter((x) => x.score <= lo * (1 + AUTO.TOL));
     ok.sort((a, b) => a.k - b.k || a.used - b.used || a.job.n - b.job.n || a.score - b.score || a.L - b.L);
-    return { pick: ok[0], bestScore: lo };
+    return { pick: ok[0], bestScore: lo0 };
   };
 
   /* The whole search. o: {shape, A, frameMM: [width, height] in mm, photos: [{res, w, h, d}],
@@ -855,7 +960,9 @@
     if (o.colors && chroma >= AUTO.GREY_CHROMA) {
       // white and black boards first
       const bs = Object.keys(o.boards).sort((a, b) => plain(b) - plain(a));
-      const parts = await o.run(bs.map((b) => ({ type: 'fit', dmc: o.dmc, boards: { [b]: o.boards[b].hex } })), 'choosing thread colors', 0, 0.1, limit(0.2));
+      // each plain board is fitted with and without the hue term; grey and wood without
+      const fj = [].concat(...bs.map((b) => (plain(b) ? [AUTO.HUE_FIT, 0] : [0]).map((hue) => ({ type: 'fit', dmc: o.dmc, boards: { [b]: o.boards[b].hex }, hue }))));
+      const parts = await o.run(fj, 'choosing thread colors', 0, 0.1, limit(0.25));
       fits = [].concat(...parts.filter(Boolean).map((p) => p.fits));
     }
     const hex = new Map(o.dmc.map((d) => [d[0], d[2]]));
@@ -872,14 +979,21 @@
     };
     const mk = (pi, n, res) => ({ pi, threads: pals[pi].threadHex, board: pals[pi].boardHex, n, res, checkpoints: cps });
     // 1: every palette, quickly (small working size, fewer nails)
-    const r1 = await jobsRun(pals.map((p, pi) => mk(pi, nLo, AUTO.FIRST)), 'step 1 of 2', 0.1, 0.5, 0.6);
+    // a slow device (setup took over 15% of the time limit) skips step 2 and spends that time on
+    // step 1, so that more palettes are tried
+    const slowStart = isFinite(budget) && now() - t0 > 0.15 * budget;
+    // on a slow device the best fitted palette goes first, before black on white, so that a
+    // colored photo gets at least one colored test
+    const ord = pals.map((p, pi) => pi);
+    if (slowStart && pals.length > 1 && pals[1].threads.length > 1) { ord[0] = 1; ord[1] = 0; }
+    const r1 = await jobsRun(ord.map((pi) => mk(pi, nLo, AUTO.FIRST)), 'step 1 of 2', 0.1, slowStart ? 1 : 0.5, slowStart ? 0.95 : 0.6);
     if (!r1.length) r1.push(...(await jobsRun([mk(0, nLo, AUTO.FIRST)], 'step 1 of 2', 0.1, 0.5, 0)));
     const byPal = r1.map((r) => ({ pi: r.job.pi, b: best(r).score })).sort((a, b) => a.b - b.b);
     // 2: the palettes within 15% of the best (at most 3; 2 on a slow device), at full search size
     const slow = now() - t0 > budget / 2;
     const keep = byPal.filter((x) => x.b <= byPal[0].b * 1.15).slice(0, slow ? 2 : 3).map((x) => x.pi);
     let all = r1.slice(), stage2 = 0;
-    if (now() - t0 < budget * 0.75) {
+    if (!slowStart && now() - t0 < budget * 0.75) {
       const js = [].concat(...keep.map((pi) => (slow ? [mk(pi, nMax, AUTO.COARSE)] : [mk(pi, nMax, AUTO.COARSE), mk(pi, nLo, AUTO.COARSE)])));
       const r2 = await jobsRun(js, 'step 2 of 2', 0.5, 1, 1); stage2 = r2.length;
       // the step-1 results are only a guide when step 2 ran

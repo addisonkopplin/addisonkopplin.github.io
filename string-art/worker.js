@@ -18,7 +18,7 @@ self.onmessage = function (e) {
     self.postMessage({ type: 'ready', chroma: ctx.T.chroma });
   } else if (m.type === 'fit') {
     const t = ctx.photo[SA.auto.COARSE];
-    self.postMessage({ type: 'fit', id: m.id, fits: SA.fitPalettes(t.d, t.inside, m.dmc, m.boards, 3) });
+    self.postMessage({ type: 'fit', id: m.id, fits: SA.fitPalettes(t.d, t.inside, m.dmc, m.boards, 3, 0, m.hue || 0) });
   } else if (m.type === 'job') {
     self.postMessage({ type: 'job', id: m.id, result: SA.auto.evalJob(ctx, m.job), cache: ctx.cache && ctx.cache.key });
   }
@@ -44,14 +44,41 @@ function run(m) {
 
 // All threads placed together (SA.solveJoint); progress is posted while it runs.
 function joint(m) {
-  const t0 = performance.now(), n = m.nails;
+  const t0 = performance.now(), n = m.nails, K = m.threads.length;
   const P = SA.prepare(n, m.nx, m.ny, m.edge, m.w, m.skip);
   const tPrep = performance.now() - t0;
   const inside = SA.insideMask(m.shape, m.w, m.h);
+  // With m.ed (the photo at the search's scoring size), the result is scored as the search scores
+  // it at 50%, 60%, ... of the lines and at the end, and cut to the best of these: the search
+  // tests at a smaller size, where the best line count can come out higher.
+  let T = null, lay = null, cps = [], best = null;
+  if (m.ed) {
+    T = SA.target(new Uint8ClampedArray(m.ed), m.ew, m.eh, SA.insideMask(m.shape, m.ew, m.eh), m.shape, { frameMM: m.frameMM });
+    lay = SA.nailLayout(m.shape, n, m.A);
+    cps = [0.5, 0.6, 0.7, 0.8, 0.9].map((f) => Math.round(m.maxLines * f));
+  }
+  const scoreAt = (total, orders, blocks) => {
+    const fl = SA.firstLines(blocks, K, total);
+    const sc = SA.score(SA.render(m.ew, m.eh, lay, orders, fl.counts, m.threads, m.board, 0, m.frameMM, fl.blocks), T).score;
+    if (!best || sc < best.score) best = { score: sc, L: total };
+  };
   let last = 0;
   const r = SA.solveJoint(P, new Uint8ClampedArray(m.d), inside, m.threads, m.board, {
     frameMM: m.frameMM, maxLines: m.maxLines, minBlock: m.minBlock, switchPenalty: m.switchPenalty,
-    stop: (total) => { const t = performance.now(); if (t - last > 40) { last = t; self.postMessage({ type: 'progress', total }); } return false; }
+    stop: (total, st) => {
+      if (T && cps.includes(total)) scoreAt(total, st.orders, st.blocks);
+      const t = performance.now(); if (t - last > 40) { last = t; self.postMessage({ type: 'progress', total }); } return false;
+    }
   });
-  self.postMessage({ type: 'done', joint: true, orders: r.orders.map((o) => Array.from(o)), counts: r.counts, blocks: r.blocks, switches: r.switches, prepMs: tPrep, totalMs: performance.now() - t0 });
+  let orders = r.orders, counts = r.counts, blocks = r.blocks, cut = null;
+  if (T && r.total > 0) {
+    const prev = best; best = null; scoreAt(r.total, r.orders, r.blocks); const end = best;
+    best = prev && prev.score < end.score ? prev : end;
+    if (best.L < r.total) {
+      const fl = SA.firstLines(r.blocks, K, best.L); counts = fl.counts; blocks = fl.blocks;
+      orders = r.orders.map((o, t) => o.subarray(0, counts[t] + 1)); cut = { from: r.total, to: best.L };
+    }
+  }
+  const switches = Math.max(0, blocks.length - 1);
+  self.postMessage({ type: 'done', joint: true, orders: orders.map((o) => Array.from(o)), counts, blocks, switches, cut, prepMs: tPrep, totalMs: performance.now() - t0 });
 }
