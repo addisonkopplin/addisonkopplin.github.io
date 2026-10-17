@@ -1,14 +1,16 @@
-/* String Art Maker: user interface, crop, color separation, rendering, downloads
-   and build guide. The line solver runs in worker.js. Nothing is sent over the network. */
+/* String Art Maker: user interface, crop, rendering, downloads, build guide and the
+   Find best settings search. Nail layout, color separation, the line solver and the match
+   score are in core.js; the solver runs in worker.js. Nothing is sent over the network. */
 (function () {
   'use strict';
+  const SA = window.SACore;
   const $ = (id) => document.getElementById(id);
   const TARGET = 500;   // working resolution of the photo: pixels along the longer side
   const MAXSRC = 2400;  // photos are downscaled to this many pixels along the longer side
   const fmt = (n) => n.toLocaleString('en-US');
 
   // ---------- state ----------
-  const S = { img: null, zoom: 1, cx: 0, cy: 0, sample: false, running: false, worker: null, result: null };
+  const S = { img: null, imgId: 0, zoom: 1, cx: 0, cy: 0, sample: false, running: false, worker: null, result: null, auto: null, onFinish: null };
 
   // ---------- frame ----------
   const ASPECT = { '4:5': 4 / 5, '3:4': 3 / 4, '2:3': 2 / 3, '9:16': 9 / 16, '5:4': 5 / 4, '4:3': 4 / 3, '3:2': 3 / 2, '16:9': 16 / 9 };
@@ -30,50 +32,7 @@
     return SHAPE_NAME[F.shape] + ', ' + v(w) + ' × ' + v(h) + u + ' (width × height)';
   }
 
-  /* Nail layout for a frame of width A and height 1 (A = width / height).
-     Returns positions as fractions of the frame width (u, to the right) and height (v, down),
-     the outward direction at each nail (radians, counter-clockwise, 0 = right), the frame
-     sides each nail lies on (bit mask, rectangles only), and the perimeter in height units.
-     Nails are equally spaced by arc length, nail 0 at the middle of the right side,
-     numbered counter-clockwise. */
-  function nailLayout(shape, n, A) {
-    const u = new Float64Array(n), v = new Float64Array(n), dir = new Float64Array(n), edge = new Uint8Array(n);
-    let P;
-    if (shape === 'circle' || (shape === 'ellipse' && Math.abs(A - 1) < 1e-6)) {
-      for (let i = 0; i < n; i++) { const t = 2 * Math.PI * i / n; u[i] = 0.5 + 0.5 * Math.cos(t); v[i] = 0.5 - 0.5 * Math.sin(t); dir[i] = t; }
-      P = Math.PI * Math.min(A, 1);
-    } else if (shape === 'ellipse') {
-      const a = A / 2, b = 0.5, M = 8192, L = new Float64Array(M + 1);
-      for (let k = 1; k <= M; k++) {
-        const t0 = 2 * Math.PI * (k - 1) / M, t1 = 2 * Math.PI * k / M;
-        L[k] = L[k - 1] + Math.hypot(a * (Math.cos(t1) - Math.cos(t0)), b * (Math.sin(t1) - Math.sin(t0)));
-      }
-      P = L[M];
-      for (let i = 0, k = 0; i < n; i++) {
-        const s = i * P / n;
-        while (L[k + 1] < s) k++;
-        const t = 2 * Math.PI * (k + (s - L[k]) / (L[k + 1] - L[k])) / M;
-        u[i] = 0.5 + 0.5 * Math.cos(t); v[i] = 0.5 - 0.5 * Math.sin(t);
-        dir[i] = Math.atan2(Math.sin(t) / b, Math.cos(t) / a);
-      }
-    } else { // square or rectangle
-      P = 2 * (A + 1);
-      // path segments: [x0, y0, x1, y1, side bit, outward direction]
-      const seg = [[A, 0.5, A, 0, 1, 0], [A, 0, 0, 0, 2, Math.PI / 2], [0, 0, 0, 1, 4, Math.PI], [0, 1, A, 1, 8, -Math.PI / 2], [A, 1, A, 0.5, 1, 0]];
-      const eps = P * 1e-7;
-      for (let i = 0; i < n; i++) {
-        let s = i * P / n, q = 0;
-        for (; q < seg.length - 1; q++) { const l = Math.hypot(seg[q][2] - seg[q][0], seg[q][3] - seg[q][1]); if (s <= l + eps) break; s -= l; }
-        const g = seg[q], l = Math.hypot(g[2] - g[0], g[3] - g[1]), f = Math.min(1, Math.max(0, s / l));
-        const x = g[0] + (g[2] - g[0]) * f, y = g[1] + (g[3] - g[1]) * f;
-        u[i] = x / A; v[i] = y; edge[i] = g[4]; dir[i] = g[5];
-        // a nail exactly on a corner lies on both sides
-        const cx = x < eps ? 4 : x > A - eps ? 1 : 0, cy = y < eps ? 2 : y > 1 - eps ? 8 : 0;
-        if (cx && cy) { edge[i] = cx | cy; dir[i] = Math.atan2(cy === 2 ? 1 : -1, cx === 1 ? 1 : -1); }
-      }
-    }
-    return { u, v, dir, edge, P };
-  }
+  const nailLayout = SA.nailLayout;
   function workSize(A) { return A >= 1 ? [TARGET, Math.round(TARGET / A)] : [Math.round(TARGET * A), TARGET]; }
   function fitSize(A, max) { return A >= 1 ? [max, Math.round(max / A)] : [Math.round(max * A), max]; }
 
@@ -111,11 +70,11 @@
     cctx.restore();
   }
   function setImage(img, isSample) {
-    S.img = img; S.sample = isSample; S.zoom = 1;
+    S.img = img; S.imgId++; S.sample = isSample; S.zoom = 1;
     S.cx = img.width / 2; S.cy = img.height / 2;
     $('zoom').value = 1; $('zoom-o').textContent = '1.00×';
     $('crop-empty').hidden = true; $('credit').hidden = !isSample;
-    $('run').disabled = S.running;
+    $('run').disabled = S.running; $('auto').disabled = S.running;
     drawCrop();
     setStatus('Position the photo, then select Make string art.');
   }
@@ -266,13 +225,7 @@
   const dmcLabel = (code) => { const d = DMC.get(code); return 'DMC ' + d.code + ' ' + d.name; };
   const cur = () => ({ threads: C.threads.map((c) => DMC.get(c).hex), board: BOARDS[C.board].hex });
   const modeOf = (n) => (n > 1 ? 'multi' : 'one');
-  function lab(hex) {
-    const f = (x) => { x /= 255; return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
-    const [r, g, b] = hex2rgb(hex).map(f);
-    const X = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047, Y = 0.2126 * r + 0.7152 * g + 0.0722 * b, Z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883;
-    const t = (x) => (x > 0.008856 ? Math.cbrt(x) : 7.787 * x + 16 / 116);
-    return [116 * t(Y) - 16, 500 * (t(X) - t(Y)), 200 * (t(Y) - t(Z))];
-  }
+  const lab = SA.lab;
   // closest DMC floss to a picked color, by distance in CIELAB
   function nearestDMC(hex) {
     const p = lab(hex); let best = null, bd = Infinity;
@@ -327,95 +280,18 @@
   $('nails').addEventListener('input', updateSpacing);
 
   // ---------- color helpers ----------
-  const hex2rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const lum = (h) => { const [r, g, b] = hex2rgb(h); return 0.299 * r + 0.587 * g + 0.114 * b; };
-  const lightOnDark = (thread, board) => lum(thread) > lum(board);
+  const hex2rgb = SA.hex2rgb, lum = SA.lum, lightOnDark = SA.lightOnDark;
 
-  // ---------- preprocessing: photo -> coverage maps ----------
-  function insideMask(w, h) {
-    const m = new Uint8Array(w * h);
-    if (F.shape === 'circle' || F.shape === 'ellipse') {
-      const cx = (w - 1) / 2, cy = (h - 1) / 2, rx = w / 2, ry = h / 2;
-      for (let y = 0, i = 0; y < h; y++) for (let x = 0; x < w; x++, i++) { const a = (x - cx) / rx, b = (y - cy) / ry; m[i] = a * a + b * b <= 1 ? 1 : 0; }
-    } else m.fill(1);
-    return m;
-  }
+  // ---------- preprocessing: photo -> coverage maps (see core.js) ----------
   function photoPixels(w, h) {
     const c = document.createElement('canvas'); c.width = w; c.height = h;
     const ctx = c.getContext('2d', { willReadFrequently: true });
     drawImageTo(ctx, w, h);
     return ctx.getImageData(0, 0, w, h).data;
   }
-  // Luminance range that clips the darkest and lightest 1% of pixels inside the frame.
-  function levels(d, inside) {
-    const hist = new Uint32Array(256); let count = 0;
-    for (let i = 0; i < inside.length; i++) if (inside[i]) { hist[(0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) | 0]++; count++; }
-    let lo = 0, hi = 255, acc = 0;
-    for (; lo < 255; lo++) { acc += hist[lo]; if (acc > count * 0.01) break; }
-    for (acc = 0; hi > 0; hi--) { acc += hist[hi]; if (acc > count * 0.01) break; }
-    if (hi <= lo) { lo = 0; hi = 255; }
-    return [lo, hi];
-  }
-  // One thread: coverage follows the photo's brightness. A dark thread on a light board covers
-  // the dark parts; a light thread on a dark board covers the light parts.
-  function monoMap(w, h, light) {
-    const d = photoPixels(w, h), inside = insideMask(w, h), [lo, hi] = levels(d, inside), N = w * h, map = new Float32Array(N);
-    for (let i = 0; i < N; i++) {
-      if (!inside[i]) continue;
-      let a = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2] - lo) / (hi - lo); a = a < 0 ? 0 : a > 1 ? 1 : a;
-      map[i] = light ? 1 - Math.pow(1 - a, 1.8) : 1 - Math.pow(a, 1.8);  // exponent 1.8 strengthens mid-tones
-    }
-    return [map];
-  }
-  /* Several threads: for each pixel, find the coverage of each thread color (each >= 0, total <= 1)
-     so that board + sum(coverage_k * (thread_k - board)) is closest to the pixel color.
-     Solved by projected gradient descent on a 32 x 32 x 32 lookup table of colors. */
-  function projectCapped(a) {   // project onto {a_k >= 0, sum a_k <= 1}
-    for (let k = 0; k < a.length; k++) if (a[k] < 0) a[k] = 0;
-    let s = 0; for (const x of a) s += x;
-    if (s <= 1) return;
-    const z = Array.from(a).sort((p, q) => q - p); let cum = 0, th = 0;
-    for (let j = 0; j < z.length; j++) { cum += z[j]; const t = (cum - 1) / (j + 1); if (z[j] - t > 0) th = t; }
-    for (let k = 0; k < a.length; k++) a[k] = Math.max(0, a[k] - th);
-  }
-  function multiMaps(w, h, threads, board) {
-    const K = threads.length, B = hex2rgb(board).map((x) => x / 255);
-    const D = threads.map((t) => hex2rgb(t).map((x, c) => x / 255 - B[c]));
-    let tr = 0; for (const d of D) for (const x of d) tr += x * x;
-    const eta = 1 / Math.max(tr, 1e-6), Q = 32, lut = new Float32Array(Q * Q * Q * K), a = new Float64Array(K), r = [0, 0, 0];
-    for (let ri = 0; ri < Q; ri++) for (let gi = 0; gi < Q; gi++) for (let bi = 0; bi < Q; bi++) {
-      const T = [ri / (Q - 1), gi / (Q - 1), bi / (Q - 1)];
-      a.fill(1 / (K + 1));
-      for (let it = 0; it < 150; it++) {
-        for (let c = 0; c < 3; c++) { let v = B[c] - T[c]; for (let k = 0; k < K; k++) v += a[k] * D[k][c]; r[c] = v; }
-        for (let k = 0; k < K; k++) a[k] -= eta * (r[0] * D[k][0] + r[1] * D[k][1] + r[2] * D[k][2]);
-        projectCapped(a);
-      }
-      const o = ((ri * Q + gi) * Q + bi) * K;
-      for (let k = 0; k < K; k++) lut[o + k] = a[k];
-    }
-    const d = photoPixels(w, h), inside = insideMask(w, h), [lo, hi] = levels(d, inside), N = w * h;
-    // Map the photo's brightness range onto the range the threads and board can show:
-    // from the darkest to the lightest of them. A gamma curve sets how mid-tones are shown.
-    const L = [board].concat(threads).map((h) => lum(h) / 255), tlo = Math.min(...L), thi = Math.max(...L);
-    const BOOST = 1.8, GAM = 1.3;
-    const q = (x) => { x = (x - lo) / (hi - lo); x = x < 0 ? 0 : x > 1 ? 1 : x; x = tlo + (thi - tlo) * Math.pow(x, GAM); return Math.round(x * (Q - 1)); };
-    const maps = threads.map(() => new Float32Array(N));
-    for (let i = 0; i < N; i++) {
-      if (!inside[i]) continue;
-      const o = ((q(d[i * 4]) * Q + q(d[i * 4 + 1])) * Q + q(d[i * 4 + 2])) * K;
-      for (let k = 0; k < K; k++) maps[k][i] = 1 - Math.pow(1 - lut[o + k], BOOST);
-    }
-    return maps;
-  }
-  // Lines are shared out in proportion to each map's total coverage, at least 5% each.
-  function budgets(maps, L) {
-    const s = maps.map((m) => { let t = 0; for (let i = 0; i < m.length; i++) t += m[i]; return t; });
-    const tot = s.reduce((p, q) => p + q, 0) || 1, min = 0.05;
-    let f = s.map((x) => Math.max(min, x / tot)); const fs = f.reduce((p, q) => p + q, 0); f = f.map((x) => x / fs);
-    const b = f.map((x) => Math.round(x * L)); b[b.length - 1] += L - b.reduce((p, q) => p + q, 0);
-    return b;
-  }
+  const monoMap = (w, h, light) => SA.monoMap(photoPixels(w, h), SA.insideMask(F.shape, w, h), light);
+  const multiMaps = (w, h, threads, board) => SA.multiMaps(photoPixels(w, h), SA.insideMask(F.shape, w, h), threads, board);
+  const budgets = SA.budgets;
 
   // ---------- result rendering ----------
   const out = $('out'), octx = out.getContext('2d');
@@ -463,15 +339,16 @@
     });
   }
   const meters = (m) => fmt(Math.ceil(m)) + ' m';
-  const skeins = (m) => { const k = Math.ceil(m / SKEIN_M); return fmt(k) + (k === 1 ? ' skein' : ' skeins'); };
+  // what to buy: 8 m skeins, or a cone or spool when more than 10 skeins would be needed
+  const skeins = (m) => { const k = Math.ceil(m / SKEIN_M); return k > 10 ? 'a cone or spool of at least ' + meters(m) : fmt(k) + (k === 1 ? ' skein' : ' skeins'); };
   function renderLegend() {
     const R = S.result, sl = $('shoplist');
     if (!R || !R.finished) { sl.hidden = true; return; }
     const m = threadMeters(R);
-    sl.innerHTML = '<h3>Shopping list</h3><table><thead><tr><th scope="col">Thread</th><th scope="col">Lines</th><th scope="col">Length</th><th scope="col">8 m skeins</th></tr></thead><tbody>' +
+    sl.innerHTML = '<h3>Shopping list</h3><table><thead><tr><th scope="col">Thread</th><th scope="col">Lines</th><th scope="col">Length</th><th scope="col">Buy</th></tr></thead><tbody>' +
       R.threads.map((t, i) => '<tr><td><i style="background:' + t.color + '"></i>' + (R.threads.length > 1 ? (i + 1) + '. ' : '') + dmcLabel(t.code) + '</td><td>' + fmt(t.count) +
-        '</td><td>' + meters(m[i]) + '</td><td>' + fmt(Math.ceil(m[i] / SKEIN_M)) + '</td></tr>').join('') +
-      '</tbody></table><p class="hint">Frame: ' + frameText() + '. Board: ' + BOARDS[R.boardKey].name.toLowerCase() + '. Length is the total length of the lines plus 10% for knots and winding around the nails.</p>';
+        '</td><td>' + meters(m[i]) + '</td><td class="buy">' + skeins(m[i]).replace(/^a/, 'A') + '</td></tr>').join('') +
+      '</tbody></table><p class="hint">Frame: ' + frameText() + '. Board: ' + BOARDS[R.boardKey].name.toLowerCase() + '. Length: all lines plus 10% for knots and winding. Skeins hold 8 m.</p>';
     sl.hidden = false;
   }
 
@@ -489,8 +366,9 @@
     const A = frameAspect(), lay = nailLayout(F.shape, n, A), [w, h] = workSize(A), c = cur();
     const mode = modeOf(c.threads.length), light = mode === 'one' && lightOnDark(c.threads[0], c.board);
     setOutputsEnabled(false); setBar(0); $('shoplist').hidden = true;
+    if (!S.onFinish) $('auto-note').hidden = true;
     setStatus(mode === 'multi' ? 'Separating colors…' : 'Preparing lines…');
-    $('run').textContent = 'Making string art…'; $('run').disabled = true;
+    $('run').textContent = 'Making string art…'; $('run').disabled = true; $('auto').disabled = true;
     S.running = true;
     // let the status paint before the color separation, which blocks for a moment
     setTimeout(() => {
@@ -516,15 +394,15 @@
         else if (m.type === 'done') { timing = m; wk.terminate(); S.worker = null; }
       };
       wk.onerror = () => { setStatus('The calculation stopped because of an error. Try fewer nails or lines.'); cancelAnimationFrame(raf); stop(); };
-      wk.postMessage({ type: 'run', w, h, nails: n, nx: NX, ny: NY, edge: lay.edge, strength, skip: Math.round(n * 20 / 288),
+      wk.postMessage({ type: 'run', w, h, nails: n, nx: NX, ny: NY, edge: lay.edge, strength, skip: SA.skipFor(n),
         maps: maps.map((m) => m.buffer), budgets: bud, start: 0, penalty: 0.25 }, maps.map((m) => m.buffer));
       if (window.matchMedia('(max-width: 860px)').matches) $('h-res').scrollIntoView({ behavior: 'smooth', block: 'start' });
       raf = requestAnimationFrame(frame);
     }, 30);
   }
-  function stop() { S.running = false; $('run').textContent = 'Make string art'; $('run').disabled = !S.img; }
+  function stop() { S.running = false; $('run').textContent = 'Make string art'; $('run').disabled = !S.img; $('auto').disabled = !S.img; }
   function frame() {
-    const R = S.result; let left = perFrame;
+    const R = S.result; let left = $('animate').checked ? perFrame : Infinity;
     for (let i = 0; i < R.threads.length && left > 0; i++) {
       const t = R.threads[i];
       const to = Math.min(t.rec - 1, t.drawn + left);
@@ -538,16 +416,142 @@
       setBar(0.1 + 0.9 * drawn / total);
     }
     if (timing && ti < 0) {
+      const asked = R.lines;
+      // threads with under 3% of the lines are left out of the result
+      const tot = R.threads.reduce((p, t) => p + t.count, 0), drop = R.threads.length > 1 ? R.threads.filter((t) => t.count < SA.auto.MIN_SHARE * tot) : [];
+      if (drop.length) {
+        R.threads = R.threads.filter((t) => !drop.includes(t));
+        C.threads = C.threads.filter((c) => !drop.some((t) => t.code === c)); $('palette').value = 'custom'; renderThreads();
+        paintAll(octx, out.width, out.height, R);
+      }
       R.finished = true; R.lines = R.threads.reduce((p, t) => p + t.count, 0);
       setBar(1); stop(); setOutputsEnabled(R.key === frameKey()); renderLegend();
       setStatus('Finished: ' + fmt(R.lines) + ' lines on ' + fmt(R.nails) + ' nails' + (R.threads.length > 1 ? ', ' + R.threads.length + ' threads' : '') +
-        '. Calculated in ' + (timing.totalMs / 1000).toFixed(1) + ' s.');
+        '. Calculated in ' + (timing.totalMs / 1000).toFixed(1) + ' s.' +
+        (R.lines + drop.reduce((p, t) => p + t.count, 0) < asked ? ' It stopped before ' + fmt(asked) + ' lines: no further line brings the image closer to the photo.' : '') +
+        (drop.length ? ' Removed ' + drop.map((t) => dmcLabel(t.code)).join(' and ') + ': under 3% of the lines.' : ''));
+      if (S.onFinish) { const f = S.onFinish; S.onFinish = null; f(R); }
       document.body.dataset.state = 'done';
       return;
     }
     raf = requestAnimationFrame(frame);
   }
   $('run').addEventListener('click', () => { document.body.dataset.state = 'running'; start(); });
+
+  // ---------- Find best settings ----------
+  // The search plan and the choice are in core.js (SACore.auto); this part runs the tests in
+  // several workers, shows progress, and writes the chosen settings into the controls.
+  const AU = SA.auto;
+  const PRESET_KEYS = ['black', 'bw', 'rgb', 'cmy'];
+  const PRESETS = [{ board: 'white', threads: ['310'] }, { board: 'black', threads: ['B5200'] }]
+    .concat(PRESET_KEYS.slice(1).map((k) => PALETTES[k]));
+  const presetName = (p) => Object.keys(PALETTES).find((k) => PALETTES[k].board === p.board && PALETTES[k].threads.join() === p.threads.join());
+  const viewSig = () => [S.imgId, S.zoom.toFixed(4), S.cx.toFixed(2), S.cy.toFixed(2), frameKey(), fw().toFixed(1), fh().toFixed(1)].join('|');
+  function setRange(id, v) { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); }
+  function autoUI(on) {
+    $('auto').textContent = on ? 'Cancel search' : 'Find best settings';
+    $('run').disabled = on || !S.img; $('auto-colors').disabled = on;
+  }
+  function autoEnd(msg) {
+    const st = S.auto; if (!st) return;
+    st.workers.forEach((h) => h.w.terminate()); st.workers = [];
+    S.auto = null; S.running = false; autoUI(false); setBar(0);
+    if (msg) setStatus(msg);
+  }
+  function runTasks(st, pool, tasks, onDone) {
+    return new Promise((resolve, reject) => {
+      const out = new Array(tasks.length), pending = tasks.map((t, i) => ({ t, i }));
+      let left = tasks.length;
+      if (!left) { resolve(out); return; }
+      const feed = (h) => {
+        if (st.cancelled || !pending.length) return;
+        // prefer a test that reuses this worker's pixel lists
+        let k = pending.findIndex((p) => p.t.key === h.cache); if (k < 0) k = 0;
+        const p = pending.splice(k, 1)[0];
+        h.w.onmessage = (e) => {
+          const m = e.data; if (m.type === 'ready') return;
+          if (m.cache !== undefined) h.cache = m.cache;
+          out[p.i] = m.type === 'fit' ? m.fits : m.result; left--;
+          if (onDone) onDone(tasks.length - left, tasks.length);
+          if (!left) resolve(out); else feed(h);
+        };
+        h.w.onerror = (e) => { e.preventDefault(); reject(new Error('worker')); };
+        h.w.postMessage(p.t.msg);
+      };
+      pool.forEach(feed);
+    });
+  }
+  async function autoStart() {
+    if (!S.img || S.running) return;
+    const t0 = performance.now(), A = frameAspect(), colors = $('auto-colors').checked;
+    const st = S.auto = { cancelled: false, workers: [], sig: viewSig() };
+    S.running = true; autoUI(true); setOutputsEnabled(false); $('auto-note').hidden = true; $('shoplist').hidden = true;
+    document.body.dataset.state = 'searching';
+    setStatus('Finding best settings…'); setBar(0);
+    await new Promise((r) => setTimeout(r, 30));
+    if (st.cancelled) return;
+    const photos = [AU.COARSE, AU.EVAL, AU.FULL].map((res) => { const [w, h] = SA.workSize(A, res); return { res, w, h, d: photoPixels(w, h).buffer }; });
+    const pe = photos[1], chroma = SA.target(new Uint8ClampedArray(pe.d), pe.w, pe.h, SA.insideMask(F.shape, pe.w, pe.h), F.shape).chroma;
+    const nails = AU.nailCounts(F.shape, A, fh());
+    const NW = Math.max(1, Math.min(6, (navigator.hardwareConcurrency || 4) - 1));
+    for (let i = 0; i < NW; i++) {
+      const w = new Worker('worker.js');
+      w.postMessage({ type: 'init', shape: F.shape, A, photos });
+      st.workers.push({ w, cache: null });
+    }
+    const steps = [[0, 0.04], [0.04, 0.26], [0.26, 0.86], [0.86, 1]];
+    const prog = (si, label) => (d, n) => {
+      setBar(steps[si][0] + (steps[si][1] - steps[si][0]) * d / n);
+      setStatus('Finding best settings · ' + label + ' · test ' + d + ' of ' + n);
+    };
+    const jobTasks = (jobs) => jobs.map((job) => ({ key: job.n + '|' + job.res, msg: { type: 'job', job } }));
+    try {
+      // without colors, the search uses black thread on a white board
+      const cur = colors ? { board: C.board, threads: C.threads.slice() } : { board: 'white', threads: ['310'] };
+      let fits = [];
+      if (colors && chroma >= AU.GREY_CHROMA) {
+        const dmc = [...DMC.values()].map((d) => [d.code, d.name, d.hex]);
+        const parts = await runTasks(st, st.workers, Object.keys(BOARDS).map((b) => ({ msg: { type: 'fit', dmc, boards: { [b]: BOARDS[b].hex } } })), prog(0, 'choosing thread colors'));
+        fits = [].concat(...parts);
+      }
+      const pals = AU.palettes(PRESETS, fits, cur, colors, chroma).map((p) => Object.assign(p, { boardHex: BOARDS[p.board].hex, threadHex: p.threads.map((c) => DMC.get(c).hex) }));
+      const sortN = (jobs) => jobs.sort((a, b) => a.n - b.n);
+      const r1 = await runTasks(st, st.workers, jobTasks(sortN(AU.stage1(pals, nails))), prog(1, 'step 1 of 3'));
+      const s2 = AU.stage2(pals, nails, r1);
+      const r2 = await runTasks(st, st.workers, jobTasks(sortN(s2.jobs)), prog(2, 'step 2 of 3'));
+      // the full-size tests need more memory: use at most 3 workers
+      st.workers.slice(3).forEach((h) => h.w.terminate()); st.workers = st.workers.slice(0, 3);
+      const r3 = await runTasks(st, st.workers, jobTasks(sortN(AU.stage3(pals, r2))), prog(3, 'step 3 of 3'));
+      if (st.cancelled) return;
+      const ch = AU.choose(r3), pk = ch.pick, pal = pals[pk.job.pi];
+      const tested = [r1, r2, r3].reduce((a, rs) => a + rs.reduce((b, r) => b + r.results.length, 0), 0);
+      const secs = (performance.now() - t0) / 1000;
+      const changed = st.sig !== viewSig();
+      autoEnd();
+      if (changed) { setStatus('The photo or frame changed during the search. Select Find best settings again.'); return; }
+      const keptUsed = pk.cnt.reduce((a, c, i) => a + (pk.keep[i] ? c : 0), 0), dropped = pk.k < pk.job.threads.length;
+      const lines = pk.k === 1 || dropped ? Math.min(AU.LINES[1], Math.max(AU.LINES[0], Math.ceil(keptUsed / 100) * 100)) : pk.L;
+      setRange('nails', pk.job.n); setRange('lines', lines); setRange('dark', pk.job.strength);
+      // threads with under 3% of the lines are left out
+      C.threads = pal.threads.filter((c, i) => pk.keep[i]); C.board = pal.board;
+      const kept = C.threads;
+      $('palette').value = presetName({ board: pal.board, threads: kept }) || 'custom'; renderThreads();
+      const sp = nails.spacingAt(pk.job.n);
+      const note = 'Find best settings tested ' + fmt(tested) + ' combinations in ' + secs.toFixed(1) + ' s and chose ' + fmt(pk.job.n) + ' nails (' +
+        (F.unit === 'in' ? (sp / 25.4).toFixed(2) + ' in' : sp.toFixed(1) + ' mm') + ' apart), ' + fmt(lines) + ' lines, thread strength ' + pk.job.strength + ', and ' +
+        kept.map((c) => dmcLabel(c)).join(', ') + ' on a ' + BOARDS[pal.board].name.toLowerCase() + ' board. You can change any setting and select Make string art again.';
+      window.__stringArt.lastAuto = { secs, tested, pick: { n: pk.job.n, lines, strength: pk.job.strength, threads: kept, tested: pal.threads, board: pal.board, score: pk.score, used: pk.used, de: pk.de, ssim: pk.ssim, detail: pk.detail, ssimC: pk.ssimC }, chroma, palettes: pals.map((p) => p.board + ':' + p.threads.join('+')), bestScore: ch.bestScore, r3: r3.map((r) => ({ job: r.job, ms: r.ms, results: r.results })) };
+      S.onFinish = () => { $('auto-note').textContent = note; $('auto-note').hidden = false; };
+      document.body.dataset.state = 'running';
+      start();
+    } catch (e) {
+      if (!st.cancelled) autoEnd('The search stopped because of an error. Try a smaller photo or fewer browser tabs.');
+    }
+  }
+  $('auto').addEventListener('click', () => {
+    if (S.auto) { S.auto.cancelled = true; autoEnd('Search cancelled. The settings were not changed.'); document.body.dataset.state = 'cancelled'; return; }
+    autoStart();
+  });
 
   // ---------- downloads ----------
   function save(blob, name) {
@@ -568,7 +572,7 @@
     const head = ['# String art nail order',
       '# Frame: ' + frameText() + '. Board: ' + BOARDS[R.boardKey].name.toLowerCase() + '.',
       '# ' + R.nails + ' nails, numbered 0 to ' + (R.nails - 1) + '. ' + NUMBERING,
-      '# Thread: DMC six-strand embroidery floss, 8 m skeins. Lengths include 10% for knots and winding.'];
+      '# Thread: DMC six-strand embroidery floss. Skeins hold 8 m. Lengths include 10% for knots and winding.'];
     R.threads.forEach((t, i) => head.push('#   ' + (multi ? (i + 1) + '. ' : '') + dmcLabel(t.code) + ': ' + fmt(t.count) + ' lines, ' + meters(m[i]) + ', ' + skeins(m[i])));
     head.push(multi ? '# Wind the threads in the order listed; the last thread lies on top. Each thread section lists one nail number per row, in winding order, starting with the first nail.'
       : '# One nail number per row, in winding order, starting with the first nail.');
@@ -690,5 +694,11 @@
 
   // ---------- init ----------
   renderThreads(); syncFrameInputs(); frameChanged();
-  window.__stringArt = { buildGuide, nailOrderText, nailLayout, state: S, frame: F, colors: C, dmc: DMC, nearestDMC };
+  // match score of the current result (see core.js), for testing
+  function scoreResult() {
+    const R = S.result; if (!R || !R.finished) return null;
+    const [w, h] = SA.workSize(R.A, SA.auto.EVAL), T = SA.target(photoPixels(w, h), w, h, SA.insideMask(R.shape, w, h), R.shape);
+    return SA.score(SA.render(w, h, R.lay, R.threads.map((t) => t.order), R.threads.map((t) => t.count), R.threads.map((t) => t.color), R.board, R.strength), T);
+  }
+  window.__stringArt = { buildGuide, nailOrderText, nailLayout, state: S, frame: F, colors: C, dmc: DMC, nearestDMC, core: SA, scoreResult };
 })();

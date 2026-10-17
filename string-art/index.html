@@ -17,9 +17,9 @@
 <div class="app">
 <div class="page">
 <header class="top">
-  <nav class="nav" aria-label="Site"><a class="home" href="/">String &amp; Pendulum</a><span><a href="/string-art/" aria-current="page">String Art Maker</a><a href="/harmonograph/">Harmonograph</a><a href="/shop/">Shop</a></span></nav>
+  <nav class="nav" aria-label="Site"><a class="home" href="/">String &amp; Pendulum</a><span><a href="/string-art/" aria-current="page">String Art Maker</a><a href="/harmonograph/">Harmonograph</a><a href="/spirograph/">Spirograph</a><a href="/shop/">Shop</a></span></nav>
   <h1>String Art Maker</h1>
-  <p class="lead">Turn a photo into string art: thread wound in straight lines between nails around a frame. Choose a circle, square, rectangle or oval frame, and up to three thread colors from DMC embroidery floss. This tool computes the order in which to wind each thread, shows the result, and prints a nail template and the winding sequence.</p>
+  <p class="lead">Turn a photo into string art: thread wound in straight lines between nails around a frame. Get the winding order, a preview, a shopping list and a printable nail template.</p>
   <p class="privacy">Your photo is processed in your browser and never uploaded.</p>
 </header>
 
@@ -41,7 +41,7 @@
         <label for="zoom">Zoom <output id="zoom-o">1.00×</output></label>
         <input id="zoom" type="range" min="1" max="4" step="0.01" value="1">
       </div>
-      <p class="hint">Drag the photo to position it inside the frame. Faces work best when they fill most of the frame. JPEG, PNG and WebP files work in every browser.</p>
+      <p class="hint">Drag to position. Faces work best when they fill the frame. Use JPEG, PNG or WebP.</p>
       <p class="hint credit" id="credit" hidden>Sample photo: Albert Einstein by Arthur Sasse, public domain.</p>
     </section>
 
@@ -75,7 +75,7 @@
         <div class="field" id="fh-f" hidden><label for="fh">Height</label><input id="fh" type="number" inputmode="decimal" min="10" max="200" step="0.5" value="50"></div>
         <div class="field"><label for="unit">Units</label><select id="unit"><option value="cm" selected>cm</option><option value="in">inches</option></select></div>
       </div>
-      <p class="hint">Nails are placed at equal spacing along the edge of the frame. The size sets the scale of the printed nail template.</p>
+      <p class="hint">Nails are evenly spaced along the edge. The size sets the template scale and thread lengths.</p>
     </section>
 
     <section aria-labelledby="h-color">
@@ -97,7 +97,7 @@
           <button class="btn small" id="add-thread" type="button">Add thread</button>
           <button class="btn small" id="del-thread" type="button">Remove last thread</button>
         </div>
-        <p class="hint">Every color is a DMC six-strand embroidery floss, sold in 8 m skeins. Select a swatch to pick any color; it changes to the closest DMC floss. Up to three threads. With more than one thread, the last thread lies on top.</p>
+        <p class="hint">DMC six-strand embroidery floss. Pick a color to get the closest floss. Up to three threads; the last lies on top.</p>
       </div>
       <div class="field">
         <label for="board">Board</label>
@@ -112,21 +112,27 @@
 
     <section aria-labelledby="h-set">
       <h2 id="h-set">Settings</h2>
+      <div class="auto">
+        <button class="btn wide" id="auto" type="button" disabled>Find best settings</button>
+        <label class="check"><input type="checkbox" id="auto-colors" checked> Include thread colors and board</label>
+        <p class="hint">Tests nail counts, line counts, thread strengths and colors on this photo and frame, sets the controls to the best match and makes the string art. Takes 15 to 60 seconds.</p>
+      </div>
       <div class="field">
         <label for="nails">Nails <output id="nails-o">288</output></label>
         <input id="nails" type="range" min="150" max="360" step="6" value="288">
-        <p class="hint">The number of nails around the frame. More nails give finer detail. <span id="spacing"></span></p>
+        <p class="hint">More nails give finer detail. <span id="spacing"></span></p>
       </div>
       <div class="field">
         <label for="lines">Lines <output id="lines-o">5,000</output></label>
         <input id="lines" type="range" min="1000" max="6000" step="100" value="5000">
-        <p class="hint">The total number of straight thread segments between nails, for all threads together.</p>
+        <p class="hint">Straight segments between nails, all threads together.</p>
       </div>
       <div class="field">
         <label for="dark">Thread strength <output id="dark-o">8</output></label>
         <input id="dark" type="range" min="3" max="16" step="1" value="8">
-        <p class="hint">How much of the image each line covers. Use a higher value for thick thread.</p>
+        <p class="hint">How dark each line is drawn. Higher for thick thread.</p>
       </div>
+      <label class="check"><input type="checkbox" id="animate" checked> Show lines as they are drawn</label>
       <button class="btn primary" id="run" type="button" disabled>Make string art</button>
     </section>
   </div>
@@ -136,6 +142,7 @@
     <div class="stage" id="stage"><canvas id="out" width="1200" height="1200" aria-label="String art result"></canvas></div>
     <p class="status" id="status" aria-live="polite">Choose a photo or use the sample photo, then select Make string art.</p>
     <div class="bar" aria-hidden="true"><span id="bar"></span></div>
+    <p class="hint auto-note" id="auto-note" hidden></p>
     <div class="shop-list" id="shoplist" hidden></div>
     <div class="row btns">
       <button class="btn" id="dl-png" type="button" disabled>Download image (PNG)</button>
@@ -147,7 +154,7 @@
 <section class="guide-opts" aria-labelledby="h-guide">
   <h2 id="h-guide">Build guide</h2>
   <div>
-    <p class="text">The build guide has a nail template and the winding sequence for each thread. The template shows every nail position with its number, at the frame size set above.</p>
+    <p class="text">A nail template at the frame size, the shopping list and the winding sequence for each thread.</p>
     <div class="opts">
       <div class="field">
         <label for="paper">Paper</label>
@@ -159,19 +166,18 @@
       </div>
     </div>
     <button class="btn" id="print" type="button" disabled>Print build guide</button>
-    <p class="hint" id="guide-note">The guide is available once the string art is finished.</p>
+    <p class="hint" id="guide-note">Available when the string art is finished.</p>
   </div>
 </section>
 
 <section aria-labelledby="h-how">
   <h2 id="h-how">How it works</h2>
   <div class="text">
-    <p>Nails are placed at equal spacing along the edge of the frame: a circle, square, rectangle or oval. Nail 0 is at the middle of the right side, and the numbers increase counter-clockwise.</p>
-    <p>Each thread starts at nail 0. At each step, the program tests a straight line from the current nail to every other nail. It picks the line that crosses the most area that still needs this thread, reduces that need under the line in its working copy of the photo, and moves to the chosen nail. It repeats this for the chosen number of lines. Lines between nails that are close together, and lines between nails on the same straight side, are skipped, because they would run along the edge of the frame.</p>
-    <p>With one thread, a dark thread covers the dark parts of the photo and a light thread on a dark board covers the light parts.</p>
-    <p>With two or three threads, the program first maps the photo’s brightness onto the range the chosen threads and board can show. For every part of the photo, it then works out how much of each thread color is needed so that the threads, mixed over the board color, come closest to the photo’s color. It uses the screen colors of the chosen DMC floss and board for this. It then runs the line-by-line process once for each thread, in winding order. A line scores lower where it crosses areas that need the other threads more. The lines are shared out between the threads in proportion to how much of the photo each one covers. Each thread is a separate winding with its own nail order.</p>
-    <p>Thread colors are DMC six-strand embroidery floss, named by DMC number. A picked color changes to the DMC floss closest to it in perceived color. Screen colors are approximate. The shopping list adds up the length of every line at the frame size you set, plus 10% for knots and winding around the nails, and rounds up to whole 8 m skeins.</p>
-    <p>Source code: <a href="https://github.com/addisonkopplin/string_art">github.com/addisonkopplin/string_art</a></p>
+    <p>Nail 0 is at the middle of the right side; numbers increase counter-clockwise. From the current nail, the program takes the line that crosses the most area still needing thread, then lowers that need under it. With one thread, it stops when no line brings the image closer to the photo. Each nail pair is used once per thread.</p>
+    <p>With several threads, each area gets the thread mix over the board color closest to the photo, and lines are shared by how much each thread covers. A thread with under 3% of the lines is removed.</p>
+    <p>Find best settings makes small test versions and compares each with the photo, both blurred as seen from a distance: color difference, light and dark patterns, fine detail and color patterns. It tries preset palettes and DMC floss sets that mix to the photo’s colors, or only black or white thread for a photo with little color. The best few are retested at full size. Fewer threads, lines or nails win if within 1% of the best score. Nails stay at least 3.5 mm apart.</p>
+    <p>Colors are DMC floss numbers; screen colors are approximate. Lengths add 10% for knots and winding.</p>
+    <p><a href="https://github.com/addisonkopplin/string_art">Source code</a></p>
   </div>
 </section>
 </main>
@@ -179,6 +185,7 @@
 </div>
 <div id="guide" class="guide" aria-hidden="true"></div>
 <script src="dmc.js"></script>
+<script src="core.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
