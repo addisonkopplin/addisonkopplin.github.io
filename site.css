@@ -1,0 +1,41 @@
+/* Shared site header, skip link and footer. Linked from every page.
+   The header and footer HTML is generated into each page from one template by
+   site_nav.py, kept outside the published folder (between the nav:start/nav:end and footer:start/footer:end comments).
+   Page width: --site-w (default 72rem) matches each page's content width; a page may set it on :root. */
+.skip-link{position:absolute;left:1rem;top:-10rem;z-index:10;padding:.5rem .75rem;background:#fff;color:#111;font:500 .9375rem/1.4 Inter,system-ui,sans-serif;text-decoration:underline;text-underline-offset:.2em}
+.skip-link:focus{top:.5rem;outline:2px solid #1f3fbf;outline-offset:2px}
+.site-header,.site-footer{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}
+.site-header{border-bottom:1px solid #e4e4e4;background:#fff}
+.site-bar{max-width:var(--site-w,72rem);margin:0 auto;padding:0 2.5rem;display:flex;align-items:stretch;justify-content:space-between;gap:2rem}
+.site-name{display:flex;align-items:center;min-height:3.5rem;color:#111;font-size:.9375rem;font-weight:600;letter-spacing:-.01em;text-decoration:none;white-space:nowrap}
+.site-name:hover{color:#1f3fbf}
+.site-nav ul,.foot-nav ul{list-style:none;margin:0;padding:0;display:flex}
+.site-nav ul{gap:1.75rem}
+.site-nav li,.foot-nav li{margin:0;padding:0}
+.site-nav a{position:relative;display:flex;align-items:center;height:100%;min-height:3.5rem;color:#5c5c5c;font-size:.9375rem;font-weight:500;text-decoration:none;white-space:nowrap}
+.site-nav a:hover{color:#111}
+.site-nav a[aria-current="page"]{color:#111}
+.site-nav a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#1f3fbf}
+.site-name:focus-visible,.site-nav a:focus-visible,.foot-nav a:focus-visible{outline:2px solid #1f3fbf;outline-offset:3px}
+.site-footer{margin-top:0;border-top:1px solid #e4e4e4;background:#fff}
+.site-footer .site-bar{align-items:center;padding-top:1.25rem;padding-bottom:1.75rem;flex-wrap:wrap;row-gap:.25rem}
+.site-footer .site-name{min-height:2.75rem;font-size:.875rem}
+.foot-nav ul{flex-wrap:wrap;column-gap:1.5rem}
+.foot-nav a{display:flex;align-items:center;min-height:2.75rem;color:#5c5c5c;font-size:.875rem;text-decoration:none}
+.foot-nav a[aria-current="page"]{color:#111;text-decoration:underline;text-decoration-color:#1f3fbf;text-decoration-thickness:2px;text-underline-offset:.35em}
+.foot-nav a:hover{color:#111;text-decoration:underline;text-decoration-color:#c4c4c4;text-underline-offset:.2em}
+@media (max-width:760px){
+ .site-bar{padding:0 1.375rem;flex-direction:column;align-items:stretch;gap:0}
+ .site-name{min-height:3rem}
+ .site-name{align-self:flex-start}
+ .site-header .site-name{min-height:2.75rem;padding-top:.25rem}
+ .site-nav ul{justify-content:space-between;gap:0;overflow-x:auto;scrollbar-width:none}
+ .site-nav a{min-height:2.75rem;font-size:clamp(.75rem,3.5vw,.875rem)}
+ .site-nav a[aria-current="page"]::after{bottom:0}
+ .site-footer .site-bar{align-items:stretch;padding-top:1rem;padding-bottom:1.5rem}
+ .foot-nav ul{justify-content:space-between;column-gap:0;flex-wrap:nowrap}
+ .foot-nav a{font-size:clamp(.75rem,3.5vw,.875rem)}
+ .site-nav a:focus-visible,.foot-nav a:focus-visible{outline-offset:-2px}
+ .site-nav a,.foot-nav a{padding:0 2px}
+}
+@media print{.skip-link,.site-header,.site-footer{display:none!important}}

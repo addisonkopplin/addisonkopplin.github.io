@@ -3,41 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>String &amp; Pendulum: Free String Art, Harmonograph and Spirograph Makers</title>
-<meta name="description" content="Free browser tools: a string art generator from your photo, harmonograph and spirograph makers with SVG export, and a prices vs. inflation calculator.">
+<title>Workbench: Free Browser Tools for Drawing and Data</title>
+<meta name="description" content="Small free browser tools and experiments: a string art generator from your photo, harmonograph and spirograph makers, and a prices vs. inflation calculator.">
 <link rel="canonical" href="https://addisonkopplin.com/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="String &amp; Pendulum">
-<meta property="og:title" content="String &amp; Pendulum: Free String Art, Harmonograph and Spirograph Makers">
-<meta property="og:description" content="Free browser tools: a string art generator from your photo, harmonograph and spirograph makers with SVG export, and a prices vs. inflation calculator.">
+<meta property="og:site_name" content="Workbench">
+<meta property="og:title" content="Workbench: Free Browser Tools for Drawing and Data">
+<meta property="og:description" content="Small free browser tools and experiments: a string art generator from your photo, harmonograph and spirograph makers, and a prices vs. inflation calculator.">
 <meta property="og:url" content="https://addisonkopplin.com/">
 <meta property="og:image" content="https://addisonkopplin.com/images/og-home.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="String &amp; Pendulum: a string art portrait, a harmonograph drawing and a spirograph rosette in black line on white">
+<meta property="og:image:alt" content="Workbench: a string art portrait, a harmonograph drawing, a spirograph rosette and a price chart in black and blue line on white">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="String &amp; Pendulum: Free String Art, Harmonograph and Spirograph Makers">
-<meta name="twitter:description" content="Free browser tools: a string art generator from your photo, harmonograph and spirograph makers with SVG export, and a prices vs. inflation calculator.">
+<meta name="twitter:title" content="Workbench: Free Browser Tools for Drawing and Data">
+<meta name="twitter:description" content="Small free browser tools and experiments: a string art generator from your photo, harmonograph and spirograph makers, and a prices vs. inflation calculator.">
 <meta name="twitter:image" content="https://addisonkopplin.com/images/og-home.png">
-<meta name="twitter:image:alt" content="String &amp; Pendulum: a string art portrait, a harmonograph drawing and a spirograph rosette in black line on white">
+<meta name="twitter:image:alt" content="Workbench: a string art portrait, a harmonograph drawing, a spirograph rosette and a price chart in black and blue line on white">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fonts/Inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 @font-face{font-family:Inter;font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/Inter-latin-var.woff2) format("woff2")}
-:root{--ink:#111;--body:#2b2b2b;--mute:#6b6b6b;--rule:#e4e4e4;--accent:#1f3fbf;--label:9rem}
+:root{--site-w:58rem;--ink:#111;--body:#2b2b2b;--mute:#6b6b6b;--rule:#e4e4e4;--accent:#1f3fbf;--label:9rem}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:#fff;color:var(--body);font:400 1rem/1.6 Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 a{color:var(--ink);text-decoration:underline;text-decoration-color:#c4c4c4;text-decoration-thickness:1px;text-underline-offset:.2em}
 a:hover{color:var(--accent);text-decoration-color:currentColor}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:1px}
-.skip{position:absolute;left:-9999px}.skip:focus{left:1rem;top:1rem;background:#fff;padding:.25rem .5rem}
-.page{max-width:58rem;margin:0 auto;padding:6rem 2.5rem 4rem}
-header.top{display:grid;grid-template-columns:var(--label) 1fr;column-gap:3rem;padding-bottom:3rem}
-header.top .inner{grid-column:2}
+.page{max-width:58rem;margin:0 auto;padding:4rem 2.5rem 4rem}
+.top{display:grid;grid-template-columns:var(--label) 1fr;column-gap:3rem;padding-bottom:3rem}
+.top .inner{grid-column:2}
 h1{margin:0;color:var(--ink);font-weight:650;font-size:2.75rem;line-height:1.05;letter-spacing:-.032em}
 .title{margin:.75rem 0 0;max-width:36rem;font-size:1.1875rem;line-height:1.5;color:var(--mute);letter-spacing:-.01em}
 .links{list-style:none;margin:1.75rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.4rem 1.75rem;font-size:.9375rem}
@@ -64,10 +65,10 @@ h3 a.tname{text-decoration:none;color:var(--ink)}h3 a.tname:hover{color:var(--ac
 .entry h3{margin-bottom:.6rem}
 .pbody{grid-template-columns:minmax(0,1fr) 11rem}
 @media (max-width:760px){
- .page{padding:3.5rem 1.375rem 3rem}
- header.top,section{grid-template-columns:1fr}
- header.top .inner{grid-column:1}
- header.top{padding-bottom:2.25rem}
+ .page{padding:2.25rem 1.375rem 3rem}
+ .top,section{grid-template-columns:1fr}
+ .top .inner{grid-column:1}
+ .top{padding-bottom:2.25rem}
  h1{font-size:2.375rem}
  .title{font-size:1.125rem}
  .links{gap:.5rem 1.5rem}
@@ -80,54 +81,83 @@ h3 a.tname{text-decoration:none;color:var(--ink)}h3 a.tname:hover{color:var(--ac
  .pfig{max-width:14rem}
 }
 </style>
+<link rel="stylesheet" href="/site.css">
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
  "@type": "WebSite",
- "name": "String & Pendulum",
+ "name": "Workbench",
  "url": "https://addisonkopplin.com/",
- "description": "Free browser tools: a string art generator from your photo, harmonograph and spirograph makers with SVG export, and a prices vs. inflation calculator.",
+ "description": "Small free browser tools and experiments: a string art generator from your photo, harmonograph and spirograph makers, and a prices vs. inflation calculator.",
  "inLanguage": "en",
  "publisher": {
   "@type": "Organization",
-  "name": "String & Pendulum",
+  "name": "Workbench",
   "url": "https://addisonkopplin.com/"
  }
 }
 </script>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
+<!-- nav:start -->
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="site-bar">
+<a class="site-name" href="/" aria-current="page">Workbench</a>
+<nav class="site-nav" aria-label="Main">
+<ul>
+<li><a href="/string-art/">String Art</a></li>
+<li><a href="/harmonograph/">Harmonograph</a></li>
+<li><a href="/spirograph/">Spirograph</a></li>
+<li><a href="/prices/">Prices</a></li>
+</ul>
+</nav>
+</div>
+</header>
+<!-- nav:end -->
 <div class="page">
-<header class="top"><div class="inner">
-<h1>String &amp; Pendulum</h1>
-<p class="title">Free browser tools for string art, harmonograph and spirograph drawings, and for comparing prices with inflation. Nothing is uploaded: everything runs on your computer.</p>
-</div></header>
+<div class="top"><div class="inner">
+<h1>Workbench</h1>
+<p class="title">A collection of small browser tools and experiments: drawing tools, data tools, and more to come. Nothing is uploaded: everything runs in your browser.</p>
+</div></div>
 <main id="main">
-<section aria-labelledby="h-tools"><h2 id="h-tools">Tools</h2><div>
+<section aria-labelledby="h-drawing"><h2 id="h-drawing">Drawing</h2><div>
 <article class="entry has-fig">
 <h3><a class="tname" href="/string-art/">String Art Maker</a></h3>
-<div class="pbody"><div class="text"><p>Turns a photo into string art: one thread wound between nails spaced evenly around a circle.</p><p>At each step it picks the straight line between two nails that crosses the darkest part of the image, then lightens those pixels so later lines cover other areas. It prints a numbered nail template and the winding sequence.</p><p class="plink"><a href="/string-art/">Open the String Art Maker</a></p></div><figure class="pfig"><a href="/string-art/" tabindex="-1" aria-hidden="true"><img src="/images/string-art-einstein.jpg" width="400" height="400" alt="String art portrait of Albert Einstein sticking out his tongue, drawn with 5,000 straight black lines inside a circle" loading="lazy" decoding="async"></a><figcaption>Albert Einstein, 5,000 lines on 288 nails. Source photo: Arthur Sasse, public domain.</figcaption></figure></div>
+<div class="pbody"><div class="text"><p>Turns a photo into string art: one thread wound in straight lines between nails around a frame. It gives the winding order, a preview, a shopping list and a printable nail template.</p><p class="plink"><a href="/string-art/">Open String Art Maker</a></p></div><figure class="pfig"><a href="/string-art/" tabindex="-1" aria-hidden="true"><img src="/images/string-art-einstein.jpg" width="400" height="400" alt="String art portrait of Albert Einstein sticking out his tongue, drawn with 5,000 straight black lines inside a circle" loading="lazy" decoding="async"></a><figcaption>Albert Einstein, 5,000 lines on 288 nails. Source photo: Arthur Sasse, public domain.</figcaption></figure></div>
 </article>
 <article class="entry has-fig">
 <h3><a class="tname" href="/harmonograph/">Harmonograph Maker</a></h3>
-<div class="pbody"><div class="text"><p>Draws the curves traced by a harmonograph, a machine in which swinging pendulums move a pen across paper.</p><p>Sliders set the frequency, phase, amplitude, and damping of up to three pendulums. Download the drawing as SVG for a pen plotter or laser cutter, or as PNG. The page address stores the settings, so a link reopens the same drawing.</p><p class="plink"><a href="/harmonograph/">Open the Harmonograph Maker</a></p></div><figure class="pfig"><a href="/harmonograph/" tabindex="-1" aria-hidden="true"><img src="/images/harmonograph.jpg" width="400" height="400" alt="Harmonograph drawing: thousands of fine black curves forming overlapping loops around a dense center" loading="lazy" decoding="async"></a><figcaption>Two pendulums, frequency ratio 2 : 3.</figcaption></figure></div>
+<div class="pbody"><div class="text"><p>Draws the curves traced by a harmonograph, a machine in which swinging pendulums move a pen across paper. Set up to three pendulums, then download the drawing as SVG for a pen plotter, or as PNG.</p><p class="plink"><a href="/harmonograph/">Open Harmonograph Maker</a></p></div><figure class="pfig"><a href="/harmonograph/" tabindex="-1" aria-hidden="true"><img src="/images/harmonograph.jpg" width="400" height="400" alt="Harmonograph drawing: thousands of fine black curves forming overlapping loops around a dense center" loading="lazy" decoding="async"></a><figcaption>Two pendulums, frequency ratio 2 : 3.</figcaption></figure></div>
 </article>
 <article class="entry has-fig">
 <h3><a class="tname" href="/spirograph/">Spirograph Maker</a></h3>
-<div class="pbody"><div class="text"><p>Draws the curves made by a pen in a wheel that rolls inside or outside a fixed ring, and Lissajous figures, which combine two perpendicular sine waves.</p><p>Sliders set the ring and wheel radii, the pen position, and the number of turns, or the frequencies and phase of a Lissajous figure. Download the drawing as SVG, a single continuous line for a pen plotter, or as PNG. The page address stores the settings, so a link reopens the same drawing.</p><p class="plink"><a href="/spirograph/">Open the Spirograph Maker</a></p></div><figure class="pfig"><a href="/spirograph/" tabindex="-1" aria-hidden="true"><img src="/images/spirograph.jpg" width="400" height="400" alt="Spirograph drawing: one fine black line making 120 overlapping loops around a small open center, forming a round rosette" loading="lazy" decoding="async"></a><figcaption>Wheel rolling inside a ring, radii 47 and 120.</figcaption></figure></div>
-</article>
-<article class="entry has-fig">
-<h3><a class="tname" href="/prices/">Prices vs. Inflation</a></h3>
-<div class="pbody"><div class="text"><p>Shows how much the price of one category, such as rent, groceries, or auto repair, has changed since a year you choose, next to the change in overall prices.</p><p>It covers 32 categories, most from January 2000, using official price indexes from the U.S. Bureau of Labor Statistics. A table ranks every category, and the page address stores the choice, so a link reopens the same comparison.</p><p class="plink"><a href="/prices/">Open Prices vs. Inflation</a></p></div><figure class="pfig"><a href="/prices/" tabindex="-1" aria-hidden="true"><img src="/images/prices.jpg" width="400" height="400" alt="Line chart: auto repair prices up 57% since September 2019, against 31% for overall prices" loading="lazy" decoding="async"></a><figcaption>Auto repair, September 2019 to September 2026.</figcaption></figure></div>
+<div class="pbody"><div class="text"><p>Draws the curves made by a pen in a wheel rolling inside or outside a fixed ring, and Lissajous figures. Download the drawing as one continuous line in SVG for a pen plotter, or as PNG.</p><p class="plink"><a href="/spirograph/">Open Spirograph Maker</a></p></div><figure class="pfig"><a href="/spirograph/" tabindex="-1" aria-hidden="true"><img src="/images/spirograph.jpg" width="400" height="400" alt="Spirograph drawing: one fine black line making 120 overlapping loops around a small open center, forming a round rosette" loading="lazy" decoding="async"></a><figcaption>Wheel rolling inside a ring, radii 47 and 120.</figcaption></figure></div>
 </article>
 </div></section>
-<section aria-labelledby="h-shop"><h2 id="h-shop">Shop</h2><div class="text">
-<h3>Custom String Art Guide</h3>
-<p>A photo of your choice, turned into a print-ready guide for building string art: a full-size numbered nail template, the winding sequence, and a preview image.</p>
-<p><a class="go" href="/shop/">Visit the shop</a></p>
+<section aria-labelledby="h-data"><h2 id="h-data">Data</h2><div>
+<article class="entry has-fig">
+<h3><a class="tname" href="/prices/">Prices vs. Inflation</a></h3>
+<div class="pbody"><div class="text"><p>Shows how much the price of rent, groceries, auto repair and 29 other categories has changed since a year you choose, next to overall inflation. The figures are official price indexes from the U.S. Bureau of Labor Statistics.</p><p class="plink"><a href="/prices/">Open Prices vs. Inflation</a></p></div><figure class="pfig"><a href="/prices/" tabindex="-1" aria-hidden="true"><img src="/images/prices.jpg" width="400" height="400" alt="Line chart: auto repair prices up 57% since September 2019, against 31% for overall prices" loading="lazy" decoding="async"></a><figcaption>Auto repair, September 2019 to September 2026.</figcaption></figure></div>
+</article>
 </div></section>
 </main>
 </div>
+<!-- footer:start -->
+<footer class="site-footer">
+<div class="site-bar">
+<a class="site-name" href="/">Workbench</a>
+<nav class="foot-nav" aria-label="Footer">
+<ul>
+<li><a href="/string-art/">String Art</a></li>
+<li><a href="/harmonograph/">Harmonograph</a></li>
+<li><a href="/spirograph/">Spirograph</a></li>
+<li><a href="/prices/">Prices</a></li>
+<li><a href="/shop/">Shop</a></li>
+</ul>
+</nav>
+</div>
+</footer>
+<!-- footer:end -->
 </body>
 </html>
