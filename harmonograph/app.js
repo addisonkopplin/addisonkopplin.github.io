@@ -84,8 +84,13 @@
     const f = [0, 1, 2].slice(0, P.n).map((i) => +effFreq(i).toFixed(4));
     return (P.n === 3 ? 'Three' : 'Two') + ' pendulums · frequencies ' + f.join(' : ') + ' · ' + P.T + ' s';
   }
+  const reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
   function animate() {
+    // With reduced motion, draw the finished curve at once instead of tracing it.
+    if (reduceMotion.matches) { drawAll(); return; }
     cancelAnimationFrame(anim); document.body.dataset.state = 'drawing';
+    // Announce the start once; done() announces the end. The status is not rewritten on every frame.
+    $('status').textContent = 'Drawing…';
     const R = out.width, total = pts.length / 2 - 1, dur = 3000, t0 = performance.now(), [c, s] = toPx(R);
     let drawn = 0;
     clear(ctx, R);
@@ -95,7 +100,6 @@
         // redraw the whole path drawn so far each frame so line joins stay clean; the pen marker sits on top
         clear(ctx, R); strokeRange(ctx, R, 0, to, P.w); drawn = to;
         ctx.fillStyle = '#1f3fbf'; ctx.beginPath(); ctx.arc(c + pts[2 * to] * s, c - pts[2 * to + 1] * s, Math.max(4, R / 160), 0, TAU); ctx.fill();
-        $('status').textContent = 'Drawing: ' + Math.round(100 * to / total) + '%';
       }
       if (to < total) anim = requestAnimationFrame(frame);
       else { clear(ctx, R); strokeRange(ctx, R, 0, total, P.w); done(); }
