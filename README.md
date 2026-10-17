@@ -8,6 +8,7 @@ The site is static and served by GitHub Pages. It has no build step and makes no
 
 - `index.html`: the resume page. The styles are inside the file. It has no JavaScript.
 - `string-art/`: String Art Maker, a tool that turns a photo into string art in the browser. `worker.js` computes the nail order, `app.js` runs the page, and `sample-einstein.jpg` is the sample photo (Arthur Sasse, public domain). Photos are processed in the browser and never uploaded.
+- `shop/`: the Custom String Art Guide storefront. Prices, delivery time and checkout links are set in the `SHOP` and `PAYMENT_LINKS` objects at the top of `shop/shop.js`. While a checkout link is empty, its button shows "Coming soon". The example images in `shop/examples/` were made with the String Art Maker.
 - `404.html`: the page shown for addresses that do not exist.
 - `Addison_Kopplin_Resume.pdf`: the resume as a one-page PDF.
 - `images/string-art-einstein.jpg`: the image in the string art project entry.
