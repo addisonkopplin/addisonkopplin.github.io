@@ -1,12 +1,12 @@
 # String & Pendulum
 
-Free browser tools for making line art from thread and pendulums, plus a shop for custom string art guides. Served at the domain in `CNAME`.
+Free browser tools for making line art from thread and pendulums, a chart of prices against inflation, and a shop for custom string art guides. Served at the domain in `CNAME`.
 
 The site is static and served by GitHub Pages. It makes no third-party requests.
 
 ## Site name
 
-The name appears in the home page heading, every page title, and the top bar of every page. It is set once, in `SITE_NAME` at the top of `build_v3.py` (kept outside this folder). Change it there and re-run the script. The script rewrites `index.html`, `404.html` and `favicon.svg`, and replaces only the top-bar name and the title suffix in the tool and shop pages.
+The site files are edited directly; no script generates or overwrites them. The name appears in the home page heading, every page title, the top bar of every page, `og:site_name` and the JSON-LD. To rename the site, set `SITE_NAME` at the top of `build_v3.py` (kept outside this folder) and run `python3 build_v3.py --write`. Without `--write` it only lists what it would change. It replaces the name in those places only and never touches the domain, `CNAME`, `favicon.svg`, descriptions, nav or page content. In `string-art/` it changes only the top-bar name and the title suffix. The name drawn into `images/og-*.png` and the heading of this README must be updated by hand.
 
 ## Files
 
@@ -14,6 +14,7 @@ The name appears in the home page heading, every page title, and the top bar of 
 - `string-art/`: String Art Maker, which turns a photo into string art in the browser. `worker.js` computes the nail order, `app.js` runs the page, and `sample-einstein.jpg` is the sample photo (Arthur Sasse, public domain). Photos are processed in the browser and never uploaded.
 - `harmonograph/`: Harmonograph Maker, which draws the curves traced by swinging pendulums. It exports SVG and PNG and stores the settings in the page address.
 - `spirograph/`: Spirograph Maker, which draws hypotrochoids, epitrochoids and Lissajous figures. It exports SVG (one continuous path) and PNG and stores the settings in the page address.
+- `prices/`: Prices vs. Inflation, which charts how much a category's price has changed since a chosen year next to overall prices (CPI-U). The data is official BLS price indexes in `prices/data/prices.json`, refreshed by hand with `prices/tools/refresh_data.py`; see `prices/README.md`. Do not publish `prices/tools/cache/` (about 21 MB of raw downloads).
 - `shop/`: the Custom String Art Guide storefront. Prices, delivery time and checkout links are set in the `SHOP` and `PAYMENT_LINKS` objects at the top of `shop/shop.js`. While a checkout link is empty, its button shows "Coming soon". The example images in `shop/examples/` were made with the String Art Maker.
 - `404.html`: the page shown for addresses that do not exist.
 - `images/`: the preview images on the home page, and the link-preview images `og-*.png` (1200 × 630), one per page.
