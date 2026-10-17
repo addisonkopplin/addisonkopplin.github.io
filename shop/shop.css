@@ -1,0 +1,59 @@
+@font-face{font-family:Inter;font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/Inter-latin-var.woff2) format("woff2")}
+:root{--ink:#111;--body:#2b2b2b;--mute:#6b6b6b;--rule:#e4e4e4;--accent:#1f3fbf;--label:9rem}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#fff;color:var(--body);font:400 1rem/1.6 Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}
+a{color:var(--ink);text-decoration:underline;text-decoration-color:#c4c4c4;text-decoration-thickness:1px;text-underline-offset:.2em}
+a:hover{color:var(--accent);text-decoration-color:currentColor}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.skip{position:absolute;left:-9999px}.skip:focus{left:1rem;top:1rem;background:#fff;padding:.25rem .5rem}
+.page{max-width:64rem;margin:0 auto;padding:4rem 2.5rem 4rem}
+.nav{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin:0 0 2.75rem;font-size:.9375rem}
+.nav span{display:flex;gap:1.5rem}
+.nav a{text-decoration:none;color:var(--mute)}
+.nav a:hover,.nav a[aria-current]{color:var(--ink)}
+.nav .home{font-weight:600;color:var(--ink)}
+.top{padding-bottom:2.5rem}
+h1{margin:0;color:var(--ink);font-weight:650;font-size:2.75rem;line-height:1.08;letter-spacing:-.03em}
+.lead{margin:1rem 0 0;max-width:42rem;font-size:1.0625rem;line-height:1.65;text-wrap:pretty}
+.closed{margin:1rem 0 0;font-size:.9375rem;font-weight:600;color:var(--accent)}
+.closed[hidden]{display:none}
+section{display:grid;grid-template-columns:var(--label) minmax(0,1fr);column-gap:3rem;border-top:1px solid var(--rule);padding:2.25rem 0 2.5rem}
+h2{margin:.2rem 0 0;font-size:.75rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink)}
+h3{margin:0;font-size:1.0625rem;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+figure{margin:0}
+figure img{display:block;width:100%;height:auto}
+figcaption{margin-top:.5rem;font-size:.8125rem;color:var(--mute)}
+.ex{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.75rem}
+.note{margin:1.25rem 0 0;max-width:40rem;font-size:.8125rem;line-height:1.55;color:var(--mute)}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2rem;counter-reset:s}
+.steps li{counter-increment:s}
+.steps li::before{content:counter(s);display:block;font-size:.8125rem;font-weight:600;color:var(--accent);margin-bottom:.4rem;font-variant-numeric:tabular-nums}
+.steps p{margin:.4rem 0 0;font-size:.9375rem;line-height:1.6}
+.tiers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3rem}
+.tier{display:flex;flex-direction:column;border-top:2px solid var(--ink);padding-top:1rem}
+.th{display:flex;justify-content:space-between;align-items:baseline}
+.price{margin:0;font-size:1.5rem;font-weight:650;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tier ul{margin:.9rem 0 1.5rem;padding-left:1.1rem;flex:1}
+.tier li{margin:.35rem 0;font-size:.9375rem;line-height:1.55}
+.tier li::marker{color:#a0a0a0}
+.buy{display:flex;align-items:center;justify-content:center;min-height:2.75rem;padding:.6rem 1rem;border-radius:3px;background:var(--ink);color:#fff;font-weight:500;font-size:.9375rem;text-decoration:none}
+.buy:hover{background:#000;color:#fff}
+.buy.off{background:#efefef;color:#8a8a8a;cursor:default;pointer-events:none}
+.samples{display:grid;grid-template-columns:repeat(2,minmax(0,13rem));gap:1.75rem;margin-top:2.5rem}
+.samples img{border:1px solid var(--rule)}
+.faq{margin:0;max-width:40rem}
+.faq dt{font-weight:600;color:var(--ink);font-size:1rem}
+.faq dd{margin:.3rem 0 1.4rem;font-size:.9375rem;line-height:1.6}
+.faq dd:last-child{margin-bottom:0}
+@media (max-width:760px){
+ .page{padding:2.25rem 1.375rem 3rem}
+ .nav{margin-bottom:2rem;flex-wrap:wrap}
+ h1{font-size:2.25rem}
+ section{grid-template-columns:1fr;padding:1.75rem 0 2rem}
+ h2{margin:0 0 1.1rem}
+ .ex{grid-template-columns:1fr 1fr;gap:1rem}
+ .ex figure:first-child{grid-column:1 / -1}
+ .steps,.tiers{grid-template-columns:1fr;gap:1.75rem}
+ .samples{grid-template-columns:1fr 1fr;gap:1rem}
+}
