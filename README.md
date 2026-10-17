@@ -13,10 +13,11 @@ The name appears in the home page heading, every page title, and the top bar of 
 - `index.html`: the home page. It lists the tools and links to the shop. The styles are inside the file.
 - `string-art/`: String Art Maker, which turns a photo into string art in the browser. `worker.js` computes the nail order, `app.js` runs the page, and `sample-einstein.jpg` is the sample photo (Arthur Sasse, public domain). Photos are processed in the browser and never uploaded.
 - `harmonograph/`: Harmonograph Maker, which draws the curves traced by swinging pendulums. It exports SVG and PNG and stores the settings in the page address.
+- `spirograph/`: Spirograph Maker, which draws hypotrochoids, epitrochoids and Lissajous figures. It exports SVG (one continuous path) and PNG and stores the settings in the page address.
 - `shop/`: the Custom String Art Guide storefront. Prices, delivery time and checkout links are set in the `SHOP` and `PAYMENT_LINKS` objects at the top of `shop/shop.js`. While a checkout link is empty, its button shows "Coming soon". The example images in `shop/examples/` were made with the String Art Maker.
 - `404.html`: the page shown for addresses that do not exist.
 - `images/`: the preview images on the home page.
-- `fonts/Inter-latin-var.woff2`: the Inter typeface, Latin characters only. Its licence is in `fonts/LICENSE-Inter-OFL.txt` (SIL Open Font License 1.1).
+- `fonts/Inter-latin-var.woff2`: the Inter typeface, Latin characters only. Its license is in `fonts/LICENSE-Inter-OFL.txt` (SIL Open Font License 1.1).
 - `favicon.svg`: the browser tab icon, a circle of nails with thread across it.
 - `CNAME`: the domain GitHub Pages serves the site at.
 
