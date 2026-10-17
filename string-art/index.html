@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>String Art Maker · Addison Kopplin</title>
+<title>String Art Maker · String &amp; Pendulum</title>
 <meta name="description" content="Turn a photo into string art in your browser. Get the nail order, a preview image, and a printable nail template.">
 <link rel="canonical" href="https://addisonkopplin.com/string-art/">
 <meta name="color-scheme" content="light">
@@ -17,9 +17,9 @@
 <div class="app">
 <div class="page">
 <header class="top">
-  <nav class="nav" aria-label="Site"><a class="home" href="/">Addison Kopplin</a><span><a href="/string-art/" aria-current="page">String Art Maker</a><a href="/shop/">Shop</a></span></nav>
+  <nav class="nav" aria-label="Site"><a class="home" href="/">String &amp; Pendulum</a><span><a href="/string-art/" aria-current="page">String Art Maker</a><a href="/harmonograph/">Harmonograph</a><a href="/shop/">Shop</a></span></nav>
   <h1>String Art Maker</h1>
-  <p class="lead">Turn a photo into string art: a single thread wound between nails around a circle. This tool computes the order in which to wind the thread, shows the result, and prints a nail template and the winding sequence.</p>
+  <p class="lead">Turn a photo into string art: thread wound in straight lines between nails around a frame. Choose a circle, square, rectangle or oval frame, and up to three thread colors from DMC embroidery floss. This tool computes the order in which to wind each thread, shows the result, and prints a nail template and the winding sequence.</p>
   <p class="privacy">Your photo is processed in your browser and never uploaded.</p>
 </header>
 
@@ -34,15 +34,80 @@
       </div>
       <div class="row btns">
         <label class="btn" for="file">Choose photo</label>
-        <input id="file" type="file" accept="image/*" class="vh">
+        <input id="file" type="file" accept="image/*,.heic,.heif" class="vh">
         <button class="btn" id="sample" type="button">Use sample photo</button>
       </div>
       <div class="field">
         <label for="zoom">Zoom <output id="zoom-o">1.00×</output></label>
         <input id="zoom" type="range" min="1" max="4" step="0.01" value="1">
       </div>
-      <p class="hint">Drag the photo to position it inside the circle. Faces work best when they fill most of the circle.</p>
+      <p class="hint">Drag the photo to position it inside the frame. Faces work best when they fill most of the frame. JPEG, PNG and WebP files work in every browser.</p>
       <p class="hint credit" id="credit" hidden>Sample photo: Albert Einstein by Arthur Sasse, public domain.</p>
+    </section>
+
+    <section aria-labelledby="h-frame">
+      <h2 id="h-frame">Frame</h2>
+      <div class="field">
+        <span class="flabel" id="shape-l">Shape</span>
+        <div class="seg" role="radiogroup" aria-labelledby="shape-l">
+          <label><input type="radio" name="shape" value="circle" checked><span>Circle</span></label>
+          <label><input type="radio" name="shape" value="square"><span>Square</span></label>
+          <label><input type="radio" name="shape" value="rect"><span>Rectangle</span></label>
+          <label><input type="radio" name="shape" value="ellipse"><span>Oval</span></label>
+        </div>
+      </div>
+      <div class="field" id="aspect-f" hidden>
+        <label for="aspect">Proportions (width : height)</label>
+        <select id="aspect">
+          <option value="4:5" selected>4 : 5 portrait</option>
+          <option value="3:4">3 : 4 portrait</option>
+          <option value="2:3">2 : 3 portrait</option>
+          <option value="9:16">9 : 16 portrait</option>
+          <option value="5:4">5 : 4 landscape</option>
+          <option value="4:3">4 : 3 landscape</option>
+          <option value="3:2">3 : 2 landscape</option>
+          <option value="16:9">16 : 9 landscape</option>
+          <option value="custom">Custom width and height</option>
+        </select>
+      </div>
+      <div class="size">
+        <div class="field"><label for="fw" id="fw-l">Diameter</label><input id="fw" type="number" inputmode="decimal" min="10" max="200" step="0.5" value="40"></div>
+        <div class="field" id="fh-f" hidden><label for="fh">Height</label><input id="fh" type="number" inputmode="decimal" min="10" max="200" step="0.5" value="50"></div>
+        <div class="field"><label for="unit">Units</label><select id="unit"><option value="cm" selected>cm</option><option value="in">inches</option></select></div>
+      </div>
+      <p class="hint">Nails are placed at equal spacing along the edge of the frame. The size sets the scale of the printed nail template.</p>
+    </section>
+
+    <section aria-labelledby="h-color">
+      <h2 id="h-color">Thread colors</h2>
+      <div class="field">
+        <label for="palette">Palette</label>
+        <select id="palette">
+          <option value="black" selected>Black on white</option>
+          <option value="rgb">RGB: red, green, blue on black</option>
+          <option value="cmy">Printer colors: yellow, cyan, magenta on white</option>
+          <option value="bw">White and black on grey</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="field">
+        <span class="flabel" id="threads-l">Threads, in winding order</span>
+        <ul class="threads" id="threads" aria-labelledby="threads-l"></ul>
+        <div class="row tight">
+          <button class="btn small" id="add-thread" type="button">Add thread</button>
+          <button class="btn small" id="del-thread" type="button">Remove last thread</button>
+        </div>
+        <p class="hint">Every color is a DMC six-strand embroidery floss, sold in 8 m skeins. Select a swatch to pick any color; it changes to the closest DMC floss. Up to three threads. With more than one thread, the last thread lies on top.</p>
+      </div>
+      <div class="field">
+        <label for="board">Board</label>
+        <select id="board">
+          <option value="white">White</option>
+          <option value="black">Black</option>
+          <option value="grey">Grey</option>
+          <option value="wood">Natural wood</option>
+        </select>
+      </div>
     </section>
 
     <section aria-labelledby="h-set">
@@ -50,17 +115,17 @@
       <div class="field">
         <label for="nails">Nails <output id="nails-o">288</output></label>
         <input id="nails" type="range" min="150" max="360" step="6" value="288">
-        <p class="hint">The number of nails around the circle. More nails give finer detail.</p>
+        <p class="hint">The number of nails around the frame. More nails give finer detail. <span id="spacing"></span></p>
       </div>
       <div class="field">
         <label for="lines">Lines <output id="lines-o">5,000</output></label>
         <input id="lines" type="range" min="1000" max="6000" step="100" value="5000">
-        <p class="hint">The number of straight thread segments between nails.</p>
+        <p class="hint">The total number of straight thread segments between nails, for all threads together.</p>
       </div>
       <div class="field">
-        <label for="dark">Thread darkness <output id="dark-o">8</output></label>
+        <label for="dark">Thread strength <output id="dark-o">8</output></label>
         <input id="dark" type="range" min="3" max="16" step="1" value="8">
-        <p class="hint">How much each line darkens the image. Use a higher value for thick or dark thread.</p>
+        <p class="hint">How much of the image each line covers. Use a higher value for thick thread.</p>
       </div>
       <button class="btn primary" id="run" type="button" disabled>Make string art</button>
     </section>
@@ -68,9 +133,10 @@
 
   <section class="result" aria-labelledby="h-res">
     <h2 id="h-res">Result</h2>
-    <div class="stage"><canvas id="out" width="1200" height="1200" aria-label="String art result"></canvas></div>
+    <div class="stage" id="stage"><canvas id="out" width="1200" height="1200" aria-label="String art result"></canvas></div>
     <p class="status" id="status" aria-live="polite">Choose a photo or use the sample photo, then select Make string art.</p>
     <div class="bar" aria-hidden="true"><span id="bar"></span></div>
+    <div class="shop-list" id="shoplist" hidden></div>
     <div class="row btns">
       <button class="btn" id="dl-png" type="button" disabled>Download image (PNG)</button>
       <button class="btn" id="dl-txt" type="button" disabled>Download nail order (TXT)</button>
@@ -81,12 +147,8 @@
 <section class="guide-opts" aria-labelledby="h-guide">
   <h2 id="h-guide">Build guide</h2>
   <div>
-    <p class="text">The build guide has a nail template and the winding sequence. The template shows every nail position with its number at the diameter you choose.</p>
+    <p class="text">The build guide has a nail template and the winding sequence for each thread. The template shows every nail position with its number, at the frame size set above.</p>
     <div class="opts">
-      <div class="field">
-        <label for="diam">Diameter</label>
-        <select id="diam"><option value="300">30 cm</option><option value="400" selected>40 cm</option><option value="500">50 cm</option><option value="600">60 cm</option></select>
-      </div>
       <div class="field">
         <label for="paper">Paper</label>
         <select id="paper"><option value="letter">Letter</option><option value="a4">A4</option></select>
@@ -104,8 +166,11 @@
 <section aria-labelledby="h-how">
   <h2 id="h-how">How it works</h2>
   <div class="text">
-    <p>Nails are spaced evenly around a circle placed over the photo. The thread starts at nail 0. At each step, the program tests a straight line from the current nail to every other nail. It picks the line that crosses the darkest part of the photo, lightens those pixels in its working copy of the photo, and moves to the chosen nail. It repeats this for the chosen number of lines.</p>
-    <p>Nails are numbered from 0, counter-clockwise, starting at the 3 o’clock position. Lines between nails that are close together are skipped, so the thread does not run along the edge of the circle.</p>
+    <p>Nails are placed at equal spacing along the edge of the frame: a circle, square, rectangle or oval. Nail 0 is at the middle of the right side, and the numbers increase counter-clockwise.</p>
+    <p>Each thread starts at nail 0. At each step, the program tests a straight line from the current nail to every other nail. It picks the line that crosses the most area that still needs this thread, reduces that need under the line in its working copy of the photo, and moves to the chosen nail. It repeats this for the chosen number of lines. Lines between nails that are close together, and lines between nails on the same straight side, are skipped, because they would run along the edge of the frame.</p>
+    <p>With one thread, a dark thread covers the dark parts of the photo and a light thread on a dark board covers the light parts.</p>
+    <p>With two or three threads, the program first maps the photo’s brightness onto the range the chosen threads and board can show. For every part of the photo, it then works out how much of each thread color is needed so that the threads, mixed over the board color, come closest to the photo’s color. It uses the screen colors of the chosen DMC floss and board for this. It then runs the line-by-line process once for each thread, in winding order. A line scores lower where it crosses areas that need the other threads more. The lines are shared out between the threads in proportion to how much of the photo each one covers. Each thread is a separate winding with its own nail order.</p>
+    <p>Thread colors are DMC six-strand embroidery floss, named by DMC number. A picked color changes to the DMC floss closest to it in perceived color. Screen colors are approximate. The shopping list adds up the length of every line at the frame size you set, plus 10% for knots and winding around the nails, and rounds up to whole 8 m skeins.</p>
     <p>Source code: <a href="https://github.com/addisonkopplin/string_art">github.com/addisonkopplin/string_art</a></p>
   </div>
 </section>
@@ -113,6 +178,7 @@
 </div>
 </div>
 <div id="guide" class="guide" aria-hidden="true"></div>
+<script src="dmc.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
