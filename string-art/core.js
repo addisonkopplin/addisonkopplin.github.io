@@ -128,11 +128,12 @@
   /* Several threads: coverage of each thread color per pixel, from a 32 x 32 x 32 lookup table.
      The photo's brightness range is first mapped onto the range the threads and board can show. */
   const lutCache = new Map();
-  SA.multiMaps = function (d, inside, threads, board) {
-    const K = threads.length, B = hex2rgb(board).map((x) => x / 255);
-    const D = threads.map((t) => hex2rgb(t).map((x, c) => x / 255 - B[c]));
+  SA.multiMaps = function (d, inside, threads, board, mo) {
+    const linear = mo && mo.linear != null ? mo.linear : SA.LINEAR_MIX, tf = linear ? (x) => lin(x * 255) : (x) => x;
+    const K = threads.length, B = hex2rgb(board).map((x) => tf(x / 255));
+    const D = threads.map((t) => hex2rgb(t).map((x, c) => tf(x / 255) - B[c]));
     let tr = 0; for (const dd of D) for (const x of dd) tr += x * x;
-    const eta = 1 / Math.max(tr, 1e-6), Q = 32, key = board + threads.join('');
+    const eta = 1 / Math.max(tr, 1e-6), Q = 32, key = (linear ? 'L' : 'S') + board + threads.join('');
     // table entries are computed when first needed (NaN = not yet computed)
     let lut = lutCache.get(key);
     if (!lut) {
@@ -144,7 +145,7 @@
     const entry = (ri, gi, bi) => {
       const o = ((ri * Q + gi) * Q + bi) * K;
       if (lut[o] !== lut[o]) {
-        mix([ri / (Q - 1), gi / (Q - 1), bi / (Q - 1)], B, D, a, 150, eta, r);
+        mix([tf(ri / (Q - 1)), tf(gi / (Q - 1)), tf(bi / (Q - 1))], B, D, a, 150, eta, r);
         for (let k = 0; k < K; k++) lut[o + k] = a[k];
       }
       return o;
@@ -161,8 +162,9 @@
     }
     return maps;
   };
-  SA.maps = function (d, inside, threads, board) {
-    return threads.length > 1 ? SA.multiMaps(d, inside, threads, board) : SA.monoMap(d, inside, SA.lightOnDark(threads[0], board));
+  SA.LINEAR_MIX = false;
+  SA.maps = function (d, inside, threads, board, mo) {
+    return threads.length > 1 ? SA.multiMaps(d, inside, threads, board, mo) : SA.monoMap(d, inside, SA.lightOnDark(threads[0], board));
   };
   // Lines are shared out in proportion to each map's total coverage, at least 5% each.
   SA.budgets = function (maps, L) {
@@ -209,6 +211,7 @@
        already has enough thread scores lower. Default: below zero with one thread (it scores
        better there), stop at zero with several threads (it scores better there).
      o.repeat: allow the same nail pair twice in one thread.
+     o.stop(color, k, order): called after every line; returning true ends that thread there.
      With several threads, a line also scores lower where it crosses areas that need the other
      threads more (o.penalty). onLine(color, k, order) is called after every line. */
   SA.solve = function (P, maps, bud, strength, o, onLine) {
@@ -255,6 +258,7 @@
         }
         prev = cur; cur = bj; order[k + 1] = cur;
         if (onLine) onLine(c, k + 1, order);
+        if (o.stop && o.stop(c, k + 1, order)) { k++; break; }
       }
       carry = lines - k;   // lines a thread does not use pass to the next thread
       orders.push(order); counts.push(k);
@@ -263,19 +267,24 @@
     return { orders, counts };
   };
 
-  // ---------- preview model ----------
-  /* Renders thread lines the way the page preview draws them: lines of width 0.857 px on a
-     1200 px canvas, opacity min(0.9, 2.2 x strength), drawn in winding order over the board.
-     Here the image is W x H pixels and each line is spread over the two nearest pixel rows
-     or columns. Returns sRGB channels (0-255). counts[t] = lines of thread t to draw. */
-  SA.render = function (W, H, lay, orders, counts, colors, board, strength) {
+  // ---------- render ----------
+  /* Thread lines drawn in winding order over the board, each line spread over the two nearest
+     pixel rows or columns. Returns sRGB channels (0-255). counts[t] = lines of thread t to draw.
+     With frameMM, lines are drawn at the real thread width: opaque, SA.THREAD_MM wide on a frame
+     frameMM across (the longer side). Without it, the old screen preview is drawn instead: width
+     0.857 px on a 1200 px canvas, opacity min(0.9, 2.2 x strength). */
+  SA.THREAD_MM = 0.45;   // DMC six-strand embroidery floss used whole, pulled tight
+  SA.render = function (W, H, lay, orders, counts, colors, board, strength, frameMM) {
     const N = W * H, R = new Float32Array(N), Gc = new Float32Array(N), B = new Float32Array(N);
-    const b = hex2rgb(board); R.fill(b[0]); Gc.fill(b[1]); B.fill(b[2]);
+    const b = hex2rgb(board); R.fill(lin(b[0])); Gc.fill(lin(b[1])); B.fill(lin(b[2]));
     const { X, Y } = SA.nailPx(lay, W, H);
-    const c0 = Math.min(0.9, strength * 2.2) * (1200 / 1400) * Math.max(W, H) / 1200;
-    const put = (i, w, cr, cg, cb) => { R[i] += (cr - R[i]) * w; Gc[i] += (cg - Gc[i]) * w; B[i] += (cb - B[i]) * w; };
+    const c0 = frameMM ? SA.THREAD_MM * Math.max(W, H) / frameMM : Math.min(0.9, strength * 2.2) * (1200 / 1400) * Math.max(W, H) / 1200;
+    // mixing is done in linear light for the real thread, in sRGB for the screen preview (as a canvas does)
+    const toL = frameMM ? lin : (v) => v;
+    if (!frameMM) { R.fill(b[0]); Gc.fill(b[1]); B.fill(b[2]); }
+    const put = (i, w, cr, cg, cb) => { if (w > 1) w = 1; R[i] += (cr - R[i]) * w; Gc[i] += (cg - Gc[i]) * w; B[i] += (cb - B[i]) * w; };
     for (let t = 0; t < orders.length; t++) {
-      const [cr, cg, cb] = hex2rgb(colors[t]), o = orders[t], cnt = counts[t];
+      const [cr, cg, cb] = hex2rgb(colors[t]).map(toL), o = orders[t], cnt = counts[t];
       for (let k = 0; k < cnt; k++) {
         let x0 = X[o[k]], y0 = Y[o[k]], x1 = X[o[k + 1]], y1 = Y[o[k + 1]];
         const dx = x1 - x0, dy = y1 - y0;
@@ -298,12 +307,15 @@
         }
       }
     }
+    if (frameMM) for (let i = 0; i < N; i++) { R[i] = srgb(R[i]); Gc[i] = srgb(Gc[i]); B[i] = srgb(B[i]); }
     return [R, Gc, B];
   };
+  const srgb = (v) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
 
   // ---------- match score ----------
   // Gaussian blur of src weighted by mask m (normalized convolution); mb = blurred mask
   function gaussN(src, m, w, h, sigma, mb) {
+    if (sigma > 3) return boxN(src, m, w, h, sigma, mb);
     const r = Math.max(1, Math.ceil(sigma * 3)), ker = new Float32Array(2 * r + 1);
     let ks = 0; for (let i = -r; i <= r; i++) { ker[i + r] = Math.exp(-i * i / (2 * sigma * sigma)); ks += ker[i + r]; }
     for (let i = 0; i < ker.length; i++) ker[i] /= ks;
@@ -329,43 +341,85 @@
     if (mb) for (let i = 0; i < N; i++) out[i] = mb[i] > 1e-4 ? out[i] / mb[i] : 0;
     return out;
   }
+  // Wide blurs: three box blurs in each direction (same variance as the Gaussian), zero outside the image.
+  function boxN(src, m, w, h, sigma, mb) {
+    const r = Math.max(1, Math.round((Math.sqrt(1 + 4 * sigma * sigma) - 1) / 2)), k = 1 / (2 * r + 1);
+    const N = w * h; let a = new Float32Array(N), b = new Float32Array(N);
+    for (let i = 0; i < N; i++) a[i] = m ? src[i] * m[i] : src[i];
+    for (let pass = 0; pass < 6; pass++) {
+      const horiz = pass % 2 === 0, len = horiz ? w : h, lines = horiz ? h : w, st = horiz ? 1 : w, ls = horiz ? w : 1;
+      for (let l = 0; l < lines; l++) {
+        const o = l * ls; let s = 0;
+        for (let x = 0; x <= r && x < len; x++) s += a[o + x * st];
+        for (let x = 0; x < len; x++) {
+          b[o + x * st] = s * k;
+          const p = x + r + 1, q = x - r;
+          if (p < len) s += a[o + p * st];
+          if (q >= 0) s -= a[o + q * st];
+        }
+      }
+      const t = a; a = b; b = t;
+    }
+    if (mb) for (let i = 0; i < N; i++) a[i] = mb[i] > 1e-4 ? a[i] / mb[i] : 0;
+    return a;
+  }
   SA.blur = gaussN;
-  const CW = 0.5;   // weight of color (a, b) differences when fitting palettes
-  /* Match score. Both images are blurred in linear light (sigma = 0.4% of the frame width, the
-     scale at which single threads merge into tone at normal viewing distance) and compared
-     inside the frame, leaving out the nail ring:
-       dE      mean CIELAB difference (CIE76)
-       ssim    structural similarity of lightness L* (window sigma 0.3% of the width)
-       detail  correlation of lightness detail at two feature sizes (differences of blurs at
-               0.75-2.25% and 1.5-4.5% of the width). Unaffected by overall lightness and
-               contrast, so it measures whether features such as eyes and edges are drawn.
-       ssimC   structural similarity of the color channels a and b
-     score = dE + 40 (1 - ssim) + 60 (1 - detail) + 20 (1 - ssimC); lower is better. */
-  SA.scoreWeights = { de: 1, l: 40, d: 60, c: 20 };
-  function labFromLin(R, G, B, mask) {
-    const N = R.length, L = new Float32Array(N), A = new Float32Array(N), Bb = new Float32Array(N);
-    for (let i = 0; i < N; i++) if (mask[i]) {
-      const r = R[i], g = G[i], b = B[i];
-      const X = ft((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047), Y = ft(0.2126 * r + 0.7152 * g + 0.0722 * b), Z = ft((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883);
-      L[i] = 116 * Y - 16; A[i] = 500 * (X - Y); Bb[i] = 200 * (Y - Z);
+  const CW = 1;   // weight of color (a, b) differences when fitting palettes
+  /* Match score: how the finished piece looks from a normal viewing distance compared with the
+     photo. The piece is drawn at the real thread width (SA.render with frameMM) and both images
+     are seen as the eye sees them from the viewing distance (S-CIELAB filters, Zhang & Wandell
+     1996, on an opponent space that keeps greys grey; distance 5 x the frame size, at least 1 m).
+     Inside the frame, leaving out the nail ring:
+       de      mean CIELAB difference (CIE76): overall tone and color
+       dab     mean difference of color (a*, b*) only
+       detail  correlation of lightness detail (difference of blurs at 1.5% and 4.5% of the
+               width). Unaffected by overall lightness and contrast, so it measures whether
+               features such as eyes and edges are drawn.
+       ssim, ssimC  structural similarity of L* and of a*, b* (computed only if weighted)
+     score = 0.5 de + 1 dab + 60 (1 - detail); lower is better. The weights were tuned on a set
+     of results with a known quality order (sa-bench/ranking). */
+  SA.scoreWeights = { de: 0.5, ab: 1, d: 60, l: 0, c: 0 };
+  const XN = 0.95047, ZN = 1.08883;
+  // [FWHM in degrees, weight] for the lightness, red-green and blue-yellow channels
+  const SCIELAB = [[[0.05, 1.00327], [0.225, 0.114416], [7.0, -0.117686]], [[0.0685, 0.616725], [0.826, 0.383275]], [[0.092, 0.567885], [0.6451, 0.432115]]];
+  const mbFor = (T, s) => { let v = T.mbs.get(s); if (!v) { v = gaussN(T.m, null, T.w, T.h, s); T.mbs.set(s, v); } return v; };
+  const blurT = (x, T, s) => gaussN(x, T.m, T.w, T.h, s, mbFor(T, s));
+  function seen(lc, T) {   // linear RGB channels -> CIELAB as seen from the viewing distance
+    const N = T.w * T.h, opp = [new Float32Array(N), new Float32Array(N), new Float32Array(N)];
+    for (let i = 0; i < N; i++) {
+      const r = lc[0][i], g = lc[1][i], b = lc[2][i];
+      const X = 0.4124 * r + 0.3576 * g + 0.1805 * b, Y = 0.2126 * r + 0.7152 * g + 0.0722 * b, Z = 0.0193 * r + 0.1192 * g + 0.9505 * b;
+      opp[0][i] = Y; opp[1][i] = X / XN - Y; opp[2][i] = Y - Z / ZN;
+    }
+    const f = opp.map((ch, c) => {
+      const out = new Float32Array(N), tot = SCIELAB[c].reduce((s, k) => s + k[1], 0);
+      for (const [spread, wt] of SCIELAB[c]) {
+        const s = Math.max(0.3, spread * T.ppd / 2.3548);
+        const bl = blurT(ch, T, Math.round(s * 100) / 100);
+        for (let i = 0; i < N; i++) out[i] += (wt / tot) * bl[i];
+      }
+      return out;
+    });
+    const L = new Float32Array(N), A = new Float32Array(N), Bb = new Float32Array(N), ins = T.ins;
+    for (let i = 0; i < N; i++) if (ins[i]) {
+      const Y = f[0][i], X = XN * (f[1][i] + Y), Z = ZN * (Y - f[2][i]);
+      const fx = ft(X > 0 ? X / XN : 0), fy = ft(Y > 0 ? Y : 0), fz = ft(Z > 0 ? Z / ZN : 0);
+      L[i] = 116 * fy - 16; A[i] = 500 * (fx - fy); Bb[i] = 200 * (fy - fz);
     }
     return [L, A, Bb];
   }
-  function prepView(ch, T) {   // sRGB channels -> blurred CIELAB inside the mask
-    const N = T.w * T.h, lc = ch.map((c) => { const o = new Float32Array(N); for (let i = 0; i < N; i++) o[i] = lin(c[i]); return gaussN(o, T.m, T.w, T.h, T.sb, T.mb); });
-    return labFromLin(lc[0], lc[1], lc[2], T.ins);
-  }
+  const linCh = (ch) => ch.map((c) => { const o = new Float32Array(c.length); for (let i = 0; i < c.length; i++) o[i] = lin(c[i]); return o; });
   function stats(x, T) {
-    const mu = gaussN(x, T.m, T.w, T.h, T.sw, T.mbw), xx = new Float32Array(x.length);
+    const mu = blurT(x, T, T.sw), xx = new Float32Array(x.length);
     for (let i = 0; i < x.length; i++) xx[i] = x[i] * x[i];
-    const v = gaussN(xx, T.m, T.w, T.h, T.sw, T.mbw);
+    const v = blurT(xx, T, T.sw);
     for (let i = 0; i < x.length; i++) v[i] -= mu[i] * mu[i];
     return { x, mu, v };
   }
   function ssim(X, y, T) {
     const Y = stats(y, T), N = X.x.length, xy = new Float32Array(N);
     for (let i = 0; i < N; i++) xy[i] = X.x[i] * y[i];
-    const cxy = gaussN(xy, T.m, T.w, T.h, T.sw, T.mbw);
+    const cxy = blurT(xy, T, T.sw);
     let s = 0;
     for (let i = 0; i < N; i++) if (T.ins[i]) {
       const mx = X.mu[i], my = Y.mu[i], cv = cxy[i] - mx * my;
@@ -373,9 +427,7 @@
     }
     return s / T.cnt;
   }
-  function bands(L, T) {
-    return T.bd.map(([a, b, ma, mbb]) => { const p = gaussN(L, T.m, T.w, T.h, a, ma), q = gaussN(L, T.m, T.w, T.h, b, mbb); for (let i = 0; i < p.length; i++) p[i] -= q[i]; return p; });
-  }
+  function band(L, T) { const p = blurT(L, T, T.b1), q = blurT(L, T, T.b2); for (let i = 0; i < p.length; i++) p[i] -= q[i]; return p; }
   function ncc(a, b, T) {
     let sa = 0, sb = 0; const ins = T.ins;
     for (let i = 0; i < a.length; i++) if (ins[i]) { sa += a[i]; sb += b[i]; }
@@ -384,9 +436,12 @@
     for (let i = 0; i < a.length; i++) if (ins[i]) { const x = a[i] - sa, y = b[i] - sb; ab += x * y; aa += x * x; bb += y * y; }
     return aa > 0 && bb > 0 ? ab / Math.sqrt(aa * bb) : 0;
   }
-  /* Target for the score: the photo (RGBA, w x h) as it is, without contrast stretching. */
-  SA.target = function (d, w, h, inside, shape) {
-    const N = w * h, W = Math.max(w, h);
+  SA.viewMM = (frameMM) => Math.max(1000, 5 * frameMM);
+  /* Target for the score: the photo (RGBA, w x h) as it is, without contrast stretching.
+     view: {frameMM: longer frame side in mm (default 400), viewMM: viewing distance}. */
+  SA.target = function (d, w, h, inside, shape, view) {
+    view = view || {};
+    const N = w * h, W = Math.max(w, h), frameMM = view.frameMM || 400, viewMM = view.viewMM || SA.viewMM(frameMM);
     // frame area without the nail ring: 97% of the size for round frames, 1.5% border otherwise
     const ins = new Uint8Array(N), round = shape ? (shape === 'circle' || shape === 'ellipse') : inside[0] === 0;
     const cx = (w - 1) / 2, cy = (h - 1) / 2;
@@ -395,60 +450,83 @@
       else ins[i] = x >= W * 0.015 && x < w - W * 0.015 && y >= W * 0.015 && y < h - W * 0.015 ? 1 : 0;
     }
     const m = new Float32Array(N); let cnt = 0; for (let i = 0; i < N; i++) { m[i] = ins[i]; cnt += ins[i]; }
-    const T = { w, h, ins, m, cnt, sb: 0.004 * W, sw: 0.003 * W };
-    T.mb = gaussN(m, null, w, h, T.sb); T.mbw = gaussN(m, null, w, h, T.sw);
-    T.bd = [[0.0075, 0.0225], [0.015, 0.045]].map(([a, b]) => [a * W, b * W, gaussN(m, null, w, h, a * W), gaussN(m, null, w, h, b * W)]);
+    const T = { w, h, ins, m, cnt, frameMM, viewMM, mbs: new Map(), sw: 1.5 * W / 512, b1: 0.015 * W, b2: 0.045 * W };
+    T.ppd = W / frameMM * viewMM * Math.tan(Math.PI / 180);   // pixels per degree of visual angle
     const ch = [0, 1, 2].map((c) => Float32Array.from({ length: N }, (_, i) => d[i * 4 + c]));
-    T.lab = prepView(ch, T);
-    T.st = T.lab.map((x) => stats(x, T));
-    T.band = bands(T.lab[0], T);
+    T.lab = seen(linCh(ch), T);
+    T.band = band(T.lab[0], T);
+    const W_ = SA.scoreWeights;
+    if (W_.l || SA.SCORE_ALL) T.stL = stats(T.lab[0], T);
+    if (W_.c || SA.SCORE_ALL) T.stC = [stats(T.lab[1], T), stats(T.lab[2], T)];
     // colorfulness: mean chroma C* of the photo inside the frame
     let c = 0; for (let i = 0; i < N; i++) if (ins[i]) c += Math.hypot(T.lab[1][i], T.lab[2][i]);
     T.chroma = c / cnt;
     return T;
   };
+  /* ch: sRGB channels of SA.render(..., frameMM) at the target size. */
   SA.score = function (ch, T) {
-    const R = prepView(ch, T), P = T.lab, N = T.w * T.h, ins = T.ins;
-    let de = 0;
-    for (let i = 0; i < N; i++) if (ins[i]) { const a = R[0][i] - P[0][i], b = R[1][i] - P[1][i], c = R[2][i] - P[2][i]; de += Math.sqrt(a * a + b * b + c * c); }
-    de /= T.cnt;
-    const ssimL = ssim(T.st[0], R[0], T), rb = bands(R[0], T);
-    const detail = (ncc(T.band[0], rb[0], T) + ncc(T.band[1], rb[1], T)) / 2;
-    const ssimC = (ssim(T.st[1], R[1], T) + ssim(T.st[2], R[2], T)) / 2;
-    const W_ = SA.scoreWeights;
-    return { score: W_.de * de + W_.l * (1 - ssimL) + W_.d * (1 - detail) + W_.c * (1 - ssimC), de, ssim: ssimL, detail, ssimC };
+    const R = seen(linCh(ch), T), P = T.lab, N = T.w * T.h, ins = T.ins;
+    let de = 0, dab = 0;
+    for (let i = 0; i < N; i++) if (ins[i]) {
+      const a = R[0][i] - P[0][i], b = R[1][i] - P[1][i], c = R[2][i] - P[2][i], ab = b * b + c * c;
+      de += Math.sqrt(a * a + ab); dab += Math.sqrt(ab);
+    }
+    de /= T.cnt; dab /= T.cnt;
+    const detail = ncc(T.band, band(R[0], T), T), W_ = SA.scoreWeights;
+    const ssimL = W_.l || SA.SCORE_ALL ? ssim(T.stL, R[0], T) : null;
+    const ssimC = W_.c || SA.SCORE_ALL ? (ssim(T.stC[0], R[1], T) + ssim(T.stC[1], R[2], T)) / 2 : null;
+    const score = W_.de * de + W_.ab * dab + W_.d * (1 - detail) + (W_.l ? W_.l * (1 - ssimL) : 0) + (W_.c ? W_.c * (1 - ssimC) : 0);
+    return { score, de, dab, detail, ssim: ssimL, ssimC };
+  };
+  /* Score of a finished result, as Find best settings scores it.
+     o: {photo(w, h) -> RGBA, shape, A, lay, orders, counts, threads (hex), board (hex), strength, frameMM} */
+  SA.scoreResult = function (o) {
+    const [w, h] = SA.workSize(o.A, SA.auto.EVAL), ins = SA.insideMask(o.shape, w, h);
+    const T = SA.target(o.photo(w, h), w, h, ins, o.shape, { frameMM: o.frameMM });
+    return SA.score(SA.render(w, h, o.lay, o.orders, o.counts, o.threads, o.board, o.strength, o.frameMM || 400), T);
   };
 
   // ---------- palette candidates ----------
-  /* Thread colors for a photo. The photo's colors (contrast-stretched, grouped into a few hundred
-     bins) are matched by mixes of the board color and up to 3 DMC floss colors. For each board
-     and thread count, threads are added one at a time, each time the floss that lowers the
-     mean CIELAB difference most, then each thread is swapped for a better one if there is one.
+  /* Thread colors for a photo. The photo's colors (contrast-stretched, grouped into bins) are
+     matched by mixes of the board color and up to 3 DMC floss colors, mixed in linear light as
+     thread and board mix when seen from a distance. Only floss near one of the photo's main
+     colors is considered, plus white and black. For each board and thread count, threads are
+     added one at a time, each time the floss that lowers the mean CIELAB difference most, then
+     each thread is swapped for a better one if there is one.
      dmc: [[code, name, hex], ...]; boards: {key: hex}. Returns [{board, threads:[codes], err}]. */
   SA.fitPalettes = function (d, inside, dmc, boards, maxK) {
     const [lo, hi] = SA.levels(d, inside), bins = new Map();
     for (let i = 0; i < inside.length; i++) {
       if (!inside[i]) continue;
       const c = [0, 1, 2].map((k) => { const v = (d[i * 4 + k] - lo) / (hi - lo); return v < 0 ? 0 : v > 1 ? 1 : v; });
-      const key = ((c[0] * 11.99 | 0) * 12 + (c[1] * 11.99 | 0)) * 12 + (c[2] * 11.99 | 0);
+      const key = ((c[0] * 7.99 | 0) * 8 + (c[1] * 7.99 | 0)) * 8 + (c[2] * 7.99 | 0);
       let e = bins.get(key); if (!e) bins.set(key, e = [0, 0, 0, 0]);
       e[0] += c[0]; e[1] += c[1]; e[2] += c[2]; e[3]++;
     }
     let pts = [...bins.values()].map((e) => ({ c: [e[0] / e[3], e[1] / e[3], e[2] / e[3]], w: e[3] }));
-    pts.sort((p, q) => q.w - p.w); pts = pts.slice(0, 220);
+    pts.sort((p, q) => q.w - p.w); pts = pts.slice(0, 56);
     const wsum = pts.reduce((s, p) => s + p.w, 0);
-    pts.forEach((p) => { p.lab = [0, 0, 0]; labInto(p.c[0] * 255, p.c[1] * 255, p.c[2] * 255, p.lab, 0); });
-    const cand = dmc.map((x) => ({ code: x[0], rgb: hex2rgb(x[2]).map((v) => v / 255) }));
+    pts.forEach((p) => { p.lab = [0, 0, 0]; labInto(p.c[0] * 255, p.c[1] * 255, p.c[2] * 255, p.lab, 0); p.l = p.c.map((v) => lin(v * 255)); });
+    const all = dmc.map((x) => { const rgb = hex2rgb(x[2]), lab = [0, 0, 0]; labInto(rgb[0], rgb[1], rgb[2], lab, 0); return { code: x[0], l: rgb.map(lin), lab }; });
+    // floss near the main photo colors (the 6 nearest to each of the 20 largest bins), white and black
+    const near = new Set();
+    for (const p of pts.slice(0, 20)) {
+      all.map((c) => [c, (c.lab[0] - p.lab[0]) ** 2 + (c.lab[1] - p.lab[1]) ** 2 + (c.lab[2] - p.lab[2]) ** 2]).sort((a, b) => a[1] - b[1]).slice(0, 6).forEach((x) => near.add(x[0]));
+    }
+    all.filter((c) => c.code === 'B5200' || c.code === '310').forEach((c) => near.add(c));
+    const cand = [...near];
     const a = new Float64Array(3), r = [0, 0, 0], q = [0, 0, 0];
     function err(B, set) {
-      const D = set.map((s) => [s.rgb[0] - B[0], s.rgb[1] - B[1], s.rgb[2] - B[2]]);
+      const D = set.map((s) => [s.l[0] - B[0], s.l[1] - B[1], s.l[2] - B[2]]);
       let tr = 0; for (const x of D) tr += x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
       const eta = 1 / Math.max(tr, 1e-6), aa = a.subarray(0, D.length);
       let e = 0;
       for (const p of pts) {
-        mix(p.c, B, D, aa, 30, eta, r);
-        const m = [0, 1, 2].map((c) => { let v = B[c]; for (let k = 0; k < D.length; k++) v += aa[k] * D[k][c]; return v * 255; });
-        labInto(m[0], m[1], m[2], q, 0);
+        mix(p.l, B, D, aa, 24, eta, r);
+        let X = 0, Y = 0, Z = 0;
+        const m = [0, 1, 2].map((c) => { let v = B[c]; for (let k = 0; k < D.length; k++) v += aa[k] * D[k][c]; return v; });
+        X = ft((0.4124 * m[0] + 0.3576 * m[1] + 0.1805 * m[2]) / 0.95047); Y = ft(0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]); Z = ft((0.0193 * m[0] + 0.1192 * m[1] + 0.9505 * m[2]) / 1.08883);
+        q[0] = 116 * Y - 16; q[1] = 500 * (X - Y); q[2] = 200 * (Y - Z);
         const x = q[0] - p.lab[0], y = q[1] - p.lab[1], z = q[2] - p.lab[2];
         e += p.w * Math.sqrt(x * x + CW * CW * (y * y + z * z));
       }
@@ -456,14 +534,14 @@
     }
     const out = [];
     for (const bk of Object.keys(boards)) {
-      const B = hex2rgb(boards[bk]).map((v) => v / 255);
+      const B = hex2rgb(boards[bk]).map(lin), Bs = hex2rgb(boards[bk]).map((v) => v / 255);
       // skip floss too close to the board color: it would not show
-      const pool = cand.filter((c) => Math.abs(c.rgb[0] - B[0]) + Math.abs(c.rgb[1] - B[1]) + Math.abs(c.rgb[2] - B[2]) > 0.25);
+      const pool = cand.filter((c) => { const s = c.l.map((v) => srgb(v) / 255); return Math.abs(s[0] - Bs[0]) + Math.abs(s[1] - Bs[1]) + Math.abs(s[2] - Bs[2]) > 0.25; });
       let set = [];
-      for (let K = 1; K <= maxK; K++) {
-        let best = null, be = Infinity;
-        for (const c of pool) { if (set.includes(c)) continue; const e = err(B, set.concat([c])); if (e < be) { be = e; best = c; } }
-        set = set.concat([best]);
+      for (let K = 1; K <= maxK && K <= pool.length; K++) {
+        let bestC = null, be = Infinity;
+        for (const c of pool) { if (set.includes(c)) continue; const e = err(B, set.concat([c])); if (e < be) { be = e; bestC = c; } }
+        set = set.concat([bestC]);
         if (K > 1) {  // one swap pass
           for (let s = 0; s < set.length; s++) for (const c of pool) {
             if (set.includes(c)) continue;
@@ -479,33 +557,45 @@
 
 
   // ---------- automatic settings ----------
-  /* Search for the settings whose preview best matches the photo. The page runs the jobs in
-     several workers; the plan and the choice are made here so that they can be tested alone. */
+  /* Search for the settings whose finished piece best matches the photo (see the match score).
+     The page runs the tests in several workers; the plan and the choice are made here, so they
+     can be tested alone. */
   const AUTO = SA.auto = {
-    MIN_SPACING_MM: 3.5,          // nails closer than this are hard to place and to wind
-    LINES: [1000, 6000],          // line count range, as on the Lines slider
-    STRENGTHS: [4, 6, 8, 11, 14], // thread strength values tried first
-    TOL: 0.01,                    // a simpler setup is chosen if it scores within 1% of the best
-    COARSE: 200,                  // working size (pixels along the longer side) for the first passes
-    EVAL: 256,                    // size of the images compared with the photo
-    MIN_SHARE: 0.03,              // threads with a smaller share of the lines are dropped
-    GREY_CHROMA: 8,               // photos with less mean chroma (C*) are made with black or white thread only
-    FULL: 500                     // working size of the final pass, as used by Make string art
+    MIN_SPACING_MM: 3.5,   // nails closer than this are hard to place and to wind
+    LINES: [200, 6000],    // line count range, as on the Lines slider
+    STRENGTH: [3, 60],     // thread strength range, as on the slider
+    TOL: 0.01,             // a simpler setup is chosen if it scores within 1% of the best
+    BOARD_MARGIN: 0.03,    // a grey or wood board must score 3% better than white or black, with no less detail
+    FIRST: 80,             // working size (pixels along the longer side) of the first pass
+    COARSE: 120,           // working size of the later passes
+    EVAL: 120,             // size of the images compared with the photo
+    MIN_SHARE: 0.03,       // threads with a smaller share of the lines are dropped
+    GREY_CHROMA: 8,        // photos with less mean chroma (C*) are made with black or white thread only
+    FULL: 500,             // working size of Make string art
+    BUDGET_MS: 4500,       // after this, the search stops refining and chooses from what it has
+    PRESETS: [{ board: 'white', threads: ['310'] }, { board: 'black', threads: ['B5200'] }, { board: 'grey', threads: ['B5200', '310'] },
+      { board: 'black', threads: ['666', '702', '995'] }, { board: 'white', threads: ['973', '3846', '3805'] }]
   };
+  /* Where the thread covers the board about once, from the frame size (longer side, mm):
+     a 40 cm frame looks best with about 1500 lines at strength 24; the line count grows and the
+     strength falls in proportion to the frame size. */
+  AUTO.linesFor = (frameMM) => Math.round(1500 * frameMM / 400 / 100) * 100;
+  AUTO.strengthFor = (frameMM) => Math.round(Math.min(AUTO.STRENGTH[1], Math.max(AUTO.STRENGTH[0], 24 * 400 / frameMM)));
+  AUTO.workers = (cores) => (!cores || cores <= 4 ? 2 : Math.min(4, cores - 1));
   // Nail counts to try: up to the most nails that keep the minimum spacing, in steps of 6.
   AUTO.nailCounts = function (shape, A, heightMm) {
     const P = SA.nailLayout(shape, 8, A).P * heightMm;
     let max = Math.floor(P / AUTO.MIN_SPACING_MM / 6) * 6; max = Math.min(360, Math.max(150, max));
-    const set = new Set([0.55, 0.7, 0.85, 1].map((f) => Math.min(max, Math.max(150, Math.round(max * f / 6) * 6))));
+    const set = new Set([0.75, 1].map((f) => Math.min(max, Math.max(150, Math.round(max * f / 6) * 6))));
     return { max, list: [...set].sort((a, b) => a - b), spacingAt: (n) => P / n };
   };
-  const step = (a, b, s) => { const r = []; for (let x = a; x <= b + 1e-9; x += s) r.push(Math.round(x)); return r; };
-  AUTO.checkpoints = (lo, hi, s) => step(Math.max(AUTO.LINES[0], lo), Math.min(AUTO.LINES[1], hi), s);
+  const r100 = (x) => Math.max(AUTO.LINES[0], Math.min(AUTO.LINES[1], Math.round(x / 100) * 100));
+  AUTO.checkpoints = (L0) => [...new Set([0.33, 0.5, 0.67, 0.83, 1, 1.2, 1.45, 1.75].map((f) => r100(L0 * f)))];
 
   /* One test: solve the lines for a palette, nail count and strength at working size `res`,
-     then score the preview at several line counts. Because each thread's lines are chosen one
-     after another, the first L lines of a long run are the same as a run of L lines.
-     ctx: { shape, A, photo: {res: {d, w, h, inside}}, T: score target, cache } */
+     then score the finished piece at several line counts. Because each thread's lines are chosen
+     one after another, the first L lines of a long run are the same as a run of L lines.
+     ctx: { shape, A, frameMM, photo: {res: {d, w, h, inside}}, T: score target, cache } */
   AUTO.evalJob = function (ctx, job) {
     const t0 = Date.now(), ph = ctx.photo[job.res], w = ph.w, h = ph.h, n = job.n;
     const lay = SA.nailLayout(ctx.shape, n, ctx.A), px = SA.nailPx(lay, w, h);
@@ -517,26 +607,46 @@
     const maps = SA.maps(ph.d, ph.inside, job.threads, job.board);
     const Lmax = job.checkpoints[job.checkpoints.length - 1];
     const bud = job.threads.length > 1 ? SA.budgets(maps, Lmax) : [Lmax];
-    const s = job.strength / 100, r = SA.solve(ctx.cache.P, maps, bud, s * job.res / AUTO.FULL, {});
-    const T = ctx.T, results = []; let last = -1, lastRes = null;
-    for (const L of job.checkpoints) {
-      const cnt = r.counts.map((c, i) => Math.min(c, Math.round(bud[i] * L / Lmax)));
+    const s = job.strength / 100, T = ctx.T, results = [];
+    let last = -1, lastRes = null, worse = 0;
+    const evalAt = (L, orders, cnt) => {
       const used = cnt.reduce((a, b) => a + b, 0);
-      if (used === last) { results.push(Object.assign({}, lastRes, { L })); continue; }
+      if (used === last) { results.push(Object.assign({}, lastRes, { L })); return; }
       // threads with under 3% of the lines are left out of the result, and do not count
       const keep = cnt.map((c) => c >= AUTO.MIN_SHARE * used);
       const kc = cnt.map((c, i) => (keep[i] ? c : 0));
-      const sc = SA.score(SA.render(T.w, T.h, lay, r.orders, kc, job.threads, job.board, s), T);
-      lastRes = { L, used, score: sc.score, de: sc.de, ssim: sc.ssim, detail: sc.detail, ssimC: sc.ssimC, keep, k: keep.filter(Boolean).length, cnt };
-      results.push(lastRes); last = used;
+      const sc = SA.score(SA.render(T.w, T.h, lay, orders, kc, job.threads, job.board, s, ctx.frameMM), T);
+      const res = { L, used, score: sc.score, de: sc.de, dab: sc.dab, detail: sc.detail, keep, k: keep.filter(Boolean).length, cnt };
+      // early stop: the score has risen at two line counts in a row
+      worse = lastRes && res.score > lastRes.score ? worse + 1 : 0;
+      results.push(res); last = used; lastRes = res;
+    };
+    const o = Object.assign({}, ctx.solveOpts || {});
+    if (job.threads.length === 1) {
+      // one thread: score while solving, and stop once the score keeps rising
+      let ci = 0;
+      o.stop = (c, k, order) => {
+        if (k !== job.checkpoints[ci]) return false;
+        evalAt(k, [order], [k]); ci++;
+        return worse >= 2 || ci >= job.checkpoints.length;
+      };
+      const r = SA.solve(ctx.cache.P, maps, bud, s * job.res / AUTO.FULL, o);
+      // the solver stopped early (no line adds anything): score what it made
+      if (ci < job.checkpoints.length && worse < 2) for (; ci < job.checkpoints.length; ci++) evalAt(job.checkpoints[ci], r.orders, [Math.min(r.counts[0], job.checkpoints[ci])]);
+    } else {
+      const r = SA.solve(ctx.cache.P, maps, bud, s * job.res / AUTO.FULL, o);
+      for (const L of job.checkpoints) {
+        evalAt(L, r.orders, r.counts.map((c, i) => Math.min(c, Math.round(bud[i] * L / Lmax))));
+        if (worse >= 2) break;
+      }
     }
     return { job, results, ms: Date.now() - t0 };
   };
   const best = (res) => res.results.reduce((a, b) => (b.score < a.score ? b : a));
   const cfgKey = (j) => j.board + j.threads.join('') + '|' + j.n + '|' + j.strength;
 
-  /* Palettes to test: the preset palettes, the current one, and the two best fitted palettes
-     for each thread count. Palettes are {board: board key, threads: DMC numbers}. */
+  /* Palettes to test: the presets, the current one, and the best fitted palette for each thread
+     count. Palettes are {board: board key, threads: DMC numbers}. */
   AUTO.palettes = function (presets, fits, current, colors, chroma) {
     if (!colors) return [current];
     // a photo with little color is made with black or white thread on a white or black board
@@ -544,54 +654,78 @@
     const out = [], seen = new Set();
     const add = (p) => { const k = p.board + ':' + p.threads.join('+'); if (!seen.has(k)) { seen.add(k); out.push({ board: p.board, threads: p.threads.slice() }); } };
     presets.forEach(add); add(current);
-    for (let K = 1; K <= 3; K++) fits.filter((f) => f.threads.length === K).sort((a, b) => a.err - b.err).slice(0, 2).forEach(add);
+    for (let K = 1; K <= 3; K++) fits.filter((f) => f.threads.length === K).sort((a, b) => a.err - b.err).slice(0, 1).forEach(add);
     return out;
   };
-  // Stage 1: every candidate palette at one nail count and two strengths.
-  AUTO.stage1 = function (palettes, nails) {
-    const n = nails.list[Math.max(0, nails.list.length - 2)], cps = AUTO.checkpoints(1500, 6000, 500), jobs = [];
-    palettes.forEach((p, pi) => [6, 10].forEach((st) => jobs.push({ pi, threads: p.threadHex, board: p.boardHex, n, strength: st, res: AUTO.COARSE, checkpoints: cps })));
-    return jobs;
-  };
-  // Stage 2: the best palettes (and the best one for each thread count) at all nail counts and strengths.
-  AUTO.stage2 = function (palettes, nails, r1) {
-    const by = new Map();
-    r1.forEach((r) => { const b = best(r).score; if (!by.has(r.job.pi) || b < by.get(r.job.pi)) by.set(r.job.pi, b); });
-    const rank = [...by.entries()].sort((a, b) => a[1] - b[1]).map((e) => e[0]);
-    const keep = new Set(rank.slice(0, 3)), seenK = new Set();
-    rank.forEach((pi) => { const K = palettes[pi].threads.length; if (!seenK.has(K)) { seenK.add(K); if (keep.size < 5) keep.add(pi); } });
-    const cps = AUTO.checkpoints(1000, 6000, 500), jobs = [];
-    for (const pi of keep) for (const n of nails.list) for (const st of AUTO.STRENGTHS)
-      jobs.push({ pi, threads: palettes[pi].threadHex, board: palettes[pi].boardHex, n, strength: st, res: AUTO.COARSE, checkpoints: cps });
-    return { jobs, kept: [...keep] };
-  };
-  // Stage 3: the best few settings at full working size, with strength one step either side,
-  // and line counts in steps of 200 around the best line count found so far.
-  AUTO.stage3 = function (palettes, r2) {
-    const cand = r2.map((r) => ({ r, b: best(r) })).sort((a, b) => a.b.score - b.b.score);
-    const pick = [], seen = new Set(), seenK = new Set();
-    const add = (c) => { const k = cfgKey(c.r.job); if (!seen.has(k)) { seen.add(k); pick.push(c); } };
-    cand.slice(0, 3).forEach(add);
-    cand.forEach((c) => { const K = c.r.job.threads.length; if (!seenK.has(K)) { seenK.add(K); add(c); } });
-    const top = cand[0], jobs = [], seenJ = new Set();
-    const push = (c, st) => {
-      const j = Object.assign({}, c.r.job, { strength: st, res: AUTO.FULL });
-      const k = cfgKey(j); if (seenJ.has(k) || st < 3 || st > 16) return; seenJ.add(k);
-      j.checkpoints = AUTO.checkpoints(c.b.L - 1400, c.b.L + 1000, 200); jobs.push(j);
-    };
-    pick.forEach((c) => push(c, c.r.job.strength));
-    [-1, 1].forEach((d) => push(top, top.r.job.strength + d));
-    return jobs;
-  };
-  /* Final choice: the lowest score; but a setup with fewer threads, then fewer lines, then fewer
-     nails is preferred if its score is within TOL of the lowest. */
-  AUTO.choose = function (r3) {
-    const all = [];
-    r3.forEach((r) => r.results.forEach((x) => all.push({ job: r.job, ...x })));
+  const plain = (b) => b === 'white' || b === 'black';
+  /* Final choice: the lowest score. A grey or wood board is only chosen if it beats the best
+     white or black board result by BOARD_MARGIN and shows at least as much detail. A setup with
+     fewer threads, then fewer lines, then fewer nails is preferred if it scores within TOL. */
+  AUTO.choose = function (rs, palettes) {
+    let all = [];
+    rs.forEach((r) => r.results.forEach((x) => all.push({ job: r.job, ...x })));
+    const boardOf = (x) => (palettes ? palettes[x.job.pi].board : 'white');
+    const P = all.filter((x) => plain(boardOf(x)));
+    if (P.length) {
+      const bp = P.reduce((a, b) => (b.score < a.score ? b : a));
+      all = all.filter((x) => plain(boardOf(x)) || (x.score < bp.score * (1 - AUTO.BOARD_MARGIN) && x.detail >= bp.detail));
+    }
     const lo = Math.min(...all.map((x) => x.score));
     const ok = all.filter((x) => x.score <= lo * (1 + AUTO.TOL));
     ok.sort((a, b) => a.k - b.k || a.used - b.used || a.job.n - b.job.n || a.score - b.score || a.L - b.L);
-    return { pick: ok[0], bestScore: lo, tested: all.length };
+    return { pick: ok[0], bestScore: lo };
+  };
+
+  /* The whole search. o: {shape, A, frameMM: [width, height] in mm, photos: [{res, w, h, d}],
+     dmc: [[code, name, hex]], boards: {key: {hex}}, presets, current, colors,
+     init(msg): send msg to every worker; run(msgs, label, from, to) -> results (or a promise),
+     now(): ms clock, budgetMs}. Returns {settings, tested, pick, palettes, stages}. */
+  AUTO.search = async function (o) {
+    const now = o.now || (() => Date.now()), t0 = now(), budget = o.budgetMs == null ? AUTO.BUDGET_MS : o.budgetMs;
+    const fMM = Math.max(o.frameMM[0], o.frameMM[1]), L0 = AUTO.linesFor(fMM), s0 = AUTO.strengthFor(fMM);
+    const ready = await o.init({ type: 'init', shape: o.shape, A: o.A, photos: o.photos, frameMM: fMM });
+    const chroma = ready && ready.chroma != null ? ready.chroma : 99;
+    const nails = AUTO.nailCounts(o.shape, o.A, o.frameMM[1]);
+    let fits = [];
+    if (o.colors && chroma >= AUTO.GREY_CHROMA) {
+      const parts = await o.run(Object.keys(o.boards).map((b) => ({ type: 'fit', dmc: o.dmc, boards: { [b]: o.boards[b].hex } })), 'choosing thread colors', 0, 0.1);
+      fits = [].concat(...parts.map((p) => p.fits));
+    }
+    const hex = new Map(o.dmc.map((d) => [d[0], d[2]]));
+    const pals = AUTO.palettes(o.presets || AUTO.PRESETS, fits, o.current, o.colors, chroma)
+      .map((p) => Object.assign(p, { boardHex: o.boards[p.board].hex, threadHex: p.threads.map((c) => hex.get(c)) }));
+    const cps = AUTO.checkpoints(L0), nMax = nails.list[nails.list.length - 1], nLo = nails.list[0];
+    const clampS = (s) => Math.round(Math.min(AUTO.STRENGTH[1], Math.max(AUTO.STRENGTH[0], s)));
+    const jobsRun = async (jobs, label, a, b) => (jobs.length ? (await o.run(jobs.sort((p, q) => p.n - q.n || p.res - q.res).map((job) => ({ type: 'job', job })), label, a, b)).map((m) => m.result) : []);
+    const mk = (pi, n, st, res) => ({ pi, threads: pals[pi].threadHex, board: pals[pi].boardHex, n, strength: clampS(st), res, checkpoints: cps });
+    // 1: every palette, quickly (small working size, one nail count, one strength)
+    const r1 = await jobsRun(pals.map((p, pi) => mk(pi, nMax, s0, AUTO.FIRST)), 'step 1 of 3', 0.1, 0.35);
+    const byPal = r1.map((r) => ({ pi: r.job.pi, b: best(r).score })).sort((a, b) => a.b - b.b);
+    // on a slow device (half the time budget used), fewer palettes and strengths are retested
+    const slow = now() - t0 > budget / 2;
+    // palettes more than 25% behind the best are dropped
+    const keep = byPal.filter((x) => x.b <= byPal[0].b * 1.25).slice(0, slow ? 2 : 3).map((x) => x.pi), fs = slow ? [1, 1.6] : [0.6, 1, 1.6];
+    // 2: the best palettes at three strengths
+    const seen = new Set(), uniq = (js) => js.filter((j) => { const k = cfgKey(j) + '|' + j.res; if (seen.has(k)) return false; seen.add(k); return true; });
+    const r2 = await jobsRun(uniq([].concat(...keep.map((pi) => fs.map((f) => mk(pi, nMax, s0 * f, AUTO.COARSE))))), 'step 2 of 3', 0.35, 0.75);
+    let all = r2.slice(), stage3 = 0;
+    // 3: around the best: fewer nails, and strength one step either side (if there is time)
+    if (now() - t0 < budget) {
+      const top = r2.map((r) => ({ r, b: best(r) })).sort((a, b) => a.b.score - b.b.score), j = top[0].r.job;
+      const js = uniq([mk(j.pi, nLo, j.strength, AUTO.COARSE), mk(j.pi, nMax, j.strength * 0.8, AUTO.COARSE), mk(j.pi, nMax, j.strength * 1.25, AUTO.COARSE)]);
+      if (top[1] && top[1].r.job.pi !== j.pi) js.push(...uniq([mk(top[1].r.job.pi, nLo, top[1].r.job.strength, AUTO.COARSE)]));
+      const r3 = await jobsRun(js, 'step 3 of 3', 0.75, 1); all = all.concat(r3); stage3 = r3.length;
+    }
+    const ch = AUTO.choose(all, pals), pk = ch.pick, pal = pals[pk.job.pi];
+    const tested = [r1, all].reduce((a, rs) => a + rs.reduce((b, r) => b + r.results.length, 0), 0);
+    const keptUsed = pk.cnt.reduce((a, c, i) => a + (pk.keep[i] ? c : 0), 0), dropped = pk.k < pk.job.threads.length;
+    const lines = pk.k === 1 || dropped ? r100(Math.ceil(keptUsed / 100) * 100) : pk.L;
+    return {
+      settings: { nails: pk.job.n, lines, strength: pk.job.strength, threads: pal.threads.filter((c, i) => pk.keep[i]), board: pal.board },
+      tested, pick: pk, bestScore: ch.bestScore, chroma, palettes: pals.map((p) => p.board + ':' + p.threads.join('+')),
+      stages: [r1.length, r2.length, stage3], ms: now() - t0, spacingMM: nails.spacingAt(pk.job.n),
+      first: r1.map((r) => { const b = best(r); return { palette: pals[r.job.pi].board + ':' + pals[r.job.pi].threads.join('+'), score: b.score, L: b.L, detail: b.detail, dab: b.dab }; })
+    };
   };
 
   G.SACore = SA;

@@ -186,6 +186,8 @@
   function updateSpacing() {
     const n = +$('nails').value, lay = nailLayout(F.shape, 8, frameAspect());
     const mm = lay.P * fh() / n;
+    const fm = Math.max(fw(), fh());
+    $('suggest').textContent = 'About ' + fmt(SA.auto.linesFor(fm)) + ' lines at strength ' + SA.auto.strengthFor(fm) + ' suit this frame size.';
     $('spacing').textContent = 'Spacing on this frame: ' + (F.unit === 'cm' ? mm.toFixed(1) + ' mm' : (mm / 25.4).toFixed(2) + ' in') + '.';
   }
   radios('shape').forEach((r) => r.addEventListener('change', () => { if (r.checked) { F.shape = r.value; syncFrameInputs(); frameChanged(); } }));
@@ -305,7 +307,8 @@
     for (let i = 0; i < n; i++) { X[i] = inset + lay.u[i] * (w - 2 * inset); Y[i] = inset + lay.v[i] * (h - 2 * inset); }
     return { X, Y };
   }
-  const threadAlpha = (strength) => Math.min(0.9, strength * 2.2);
+  // lines are drawn at the real thread width for the frame size, opaque
+  const threadPx = (R, w, h) => Math.max(0.35, SA.THREAD_MM * Math.max(w, h) / R.frameMM);
   function paintBoard(ctx, w, h, R) {
     ctx.fillStyle = R.board; ctx.fillRect(0, 0, w, h);
     const { X, Y } = geom(R.lay, w, h), M = Math.max(w, h);
@@ -314,18 +317,23 @@
   }
   function drawSegments(ctx, w, h, R, t, from, to) {
     const { X, Y } = geom(R.lay, w, h), order = R.threads[t].order;
-    ctx.lineWidth = Math.max(0.5, Math.max(w, h) / 1400);
-    const [r, g, b] = hex2rgb(R.threads[t].color);
-    ctx.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + threadAlpha(R.strength) + ')';
-    ctx.lineCap = 'round';
+    ctx.lineWidth = threadPx(R, w, h);
+    ctx.strokeStyle = R.threads[t].color;
+    ctx.lineCap = 'butt';
     for (let k = from; k < to; k++) {
       const a = order[k], c = order[k + 1];
       ctx.beginPath(); ctx.moveTo(X[a], Y[a]); ctx.lineTo(X[c], Y[c]); ctx.stroke();
     }
   }
+  // finished result: thread and board mixed in linear light, as they look from a distance
   function paintAll(ctx, w, h, R) {
-    paintBoard(ctx, w, h, R);
-    R.threads.forEach((t, i) => drawSegments(ctx, w, h, R, i, 0, t.count));
+    const ch = SA.render(w, h, R.lay, R.threads.map((t) => t.order), R.threads.map((t) => t.count), R.threads.map((t) => t.color), R.board, R.strength, R.frameMM);
+    const img = ctx.createImageData(w, h), d = img.data;
+    for (let i = 0, j = 0; i < w * h; i++, j += 4) { d[j] = ch[0][i]; d[j + 1] = ch[1][i]; d[j + 2] = ch[2][i]; d[j + 3] = 255; }
+    ctx.putImageData(img, 0, 0);
+    const { X, Y } = geom(R.lay, w, h), M = Math.max(w, h);
+    ctx.fillStyle = lum(R.board) < 110 ? '#bdbdbd' : '#8a8a8a';
+    for (let i = 0; i < X.length; i++) { ctx.beginPath(); ctx.arc(X[i], Y[i], Math.max(1, M / 900), 0, Math.PI * 2); ctx.fill(); }
   }
   function redrawResult() { const R = S.result; if (!R || !R.finished) return; paintAll(octx, out.width, out.height, R); renderLegend(); }
   // Thread needed per color at the current frame size: the sum of the line lengths plus 10%.
@@ -375,7 +383,7 @@
       const multi = mode === 'multi';
       const maps = multi ? multiMaps(w, h, c.threads, c.board) : monoMap(w, h, light);
       const bud = multi ? budgets(maps, L) : [L];
-      const R = S.result = { key: frameKey(), shape: F.shape, A, lay, nails: n, lines: L, strength, mode, light, board: c.board, boardKey: C.board, finished: false,
+      const R = S.result = { key: frameKey(), shape: F.shape, A, lay, frameMM: Math.max(fw(), fh()), nails: n, lines: L, strength, mode, light, board: c.board, boardKey: C.board, finished: false,
         threads: c.threads.map((col, i) => ({ color: col, code: C.threads[i], budget: bud[i], order: new Uint16Array(bud[i] + 1), rec: 0, drawn: 0, count: bud[i], done: false })) };
       resizeOut(); paintBoard(octx, out.width, out.height, R);
       perFrame = Math.max(10, Math.ceil(L / 180)); timing = null;
@@ -422,8 +430,8 @@
       if (drop.length) {
         R.threads = R.threads.filter((t) => !drop.includes(t));
         C.threads = C.threads.filter((c) => !drop.some((t) => t.code === c)); $('palette').value = 'custom'; renderThreads();
-        paintAll(octx, out.width, out.height, R);
       }
+      paintAll(octx, out.width, out.height, R);
       R.finished = true; R.lines = R.threads.reduce((p, t) => p + t.count, 0);
       setBar(1); stop(); setOutputsEnabled(R.key === frameKey()); renderLegend();
       setStatus('Finished: ' + fmt(R.lines) + ' lines on ' + fmt(R.nails) + ' nails' + (R.threads.length > 1 ? ', ' + R.threads.length + ' threads' : '') +
@@ -471,7 +479,7 @@
         h.w.onmessage = (e) => {
           const m = e.data; if (m.type === 'ready') return;
           if (m.cache !== undefined) h.cache = m.cache;
-          out[p.i] = m.type === 'fit' ? m.fits : m.result; left--;
+          out[p.i] = m; left--;
           if (onDone) onDone(tasks.length - left, tasks.length);
           if (!left) resolve(out); else feed(h);
         };
@@ -490,57 +498,35 @@
     setStatus('Finding best settings…'); setBar(0);
     await new Promise((r) => setTimeout(r, 30));
     if (st.cancelled) return;
-    const photos = [AU.COARSE, AU.EVAL, AU.FULL].map((res) => { const [w, h] = SA.workSize(A, res); return { res, w, h, d: photoPixels(w, h).buffer }; });
-    const pe = photos[1], chroma = SA.target(new Uint8ClampedArray(pe.d), pe.w, pe.h, SA.insideMask(F.shape, pe.w, pe.h), F.shape).chroma;
-    const nails = AU.nailCounts(F.shape, A, fh());
-    const NW = Math.max(1, Math.min(6, (navigator.hardwareConcurrency || 4) - 1));
-    for (let i = 0; i < NW; i++) {
-      const w = new Worker('worker.js');
-      w.postMessage({ type: 'init', shape: F.shape, A, photos });
-      st.workers.push({ w, cache: null });
-    }
-    const steps = [[0, 0.04], [0.04, 0.26], [0.26, 0.86], [0.86, 1]];
-    const prog = (si, label) => (d, n) => {
-      setBar(steps[si][0] + (steps[si][1] - steps[si][0]) * d / n);
-      setStatus('Finding best settings · ' + label + ' · test ' + d + ' of ' + n);
-    };
-    const jobTasks = (jobs) => jobs.map((job) => ({ key: job.n + '|' + job.res, msg: { type: 'job', job } }));
+    const photos = [...new Set([AU.FIRST, AU.COARSE, AU.EVAL])].map((res) => { const [w, h] = SA.workSize(A, res); return { res, w, h, d: photoPixels(w, h).buffer }; });
+    // fewer workers on devices with few cores
+    const NW = AU.workers(navigator.hardwareConcurrency);
+    for (let i = 0; i < NW; i++) st.workers.push({ w: new Worker('worker.js'), cache: null });
+    const init = (msg) => Promise.all(st.workers.map((h) => new Promise((res, rej) => {
+      h.w.onmessage = (e) => { if (e.data.type === 'ready') res(e.data); };
+      h.w.onerror = (e) => { e.preventDefault(); rej(new Error('worker')); };
+      h.w.postMessage(msg);
+    }))).then((r) => r[0]);
+    const run = (msgs, label, a, b) => runTasks(st, st.workers, msgs.map((m) => ({ key: m.job ? m.job.n + '|' + m.job.res : null, msg: m })), (d, n) => {
+      setBar(a + (b - a) * d / n); setStatus('Finding best settings · ' + label + ' · test ' + d + ' of ' + n);
+    });
     try {
       // without colors, the search uses black thread on a white board
       const cur = colors ? { board: C.board, threads: C.threads.slice() } : { board: 'white', threads: ['310'] };
-      let fits = [];
-      if (colors && chroma >= AU.GREY_CHROMA) {
-        const dmc = [...DMC.values()].map((d) => [d.code, d.name, d.hex]);
-        const parts = await runTasks(st, st.workers, Object.keys(BOARDS).map((b) => ({ msg: { type: 'fit', dmc, boards: { [b]: BOARDS[b].hex } } })), prog(0, 'choosing thread colors'));
-        fits = [].concat(...parts);
-      }
-      const pals = AU.palettes(PRESETS, fits, cur, colors, chroma).map((p) => Object.assign(p, { boardHex: BOARDS[p.board].hex, threadHex: p.threads.map((c) => DMC.get(c).hex) }));
-      const sortN = (jobs) => jobs.sort((a, b) => a.n - b.n);
-      const r1 = await runTasks(st, st.workers, jobTasks(sortN(AU.stage1(pals, nails))), prog(1, 'step 1 of 3'));
-      const s2 = AU.stage2(pals, nails, r1);
-      const r2 = await runTasks(st, st.workers, jobTasks(sortN(s2.jobs)), prog(2, 'step 2 of 3'));
-      // the full-size tests need more memory: use at most 3 workers
-      st.workers.slice(3).forEach((h) => h.w.terminate()); st.workers = st.workers.slice(0, 3);
-      const r3 = await runTasks(st, st.workers, jobTasks(sortN(AU.stage3(pals, r2))), prog(3, 'step 3 of 3'));
+      const r = await AU.search({ shape: F.shape, A, frameMM: [fw(), fh()], photos, dmc: [...DMC.values()].map((d) => [d.code, d.name, d.hex]), boards: BOARDS,
+        presets: PRESETS, current: cur, colors, init, run, now: () => performance.now() });
       if (st.cancelled) return;
-      const ch = AU.choose(r3), pk = ch.pick, pal = pals[pk.job.pi];
-      const tested = [r1, r2, r3].reduce((a, rs) => a + rs.reduce((b, r) => b + r.results.length, 0), 0);
-      const secs = (performance.now() - t0) / 1000;
-      const changed = st.sig !== viewSig();
+      const secs = (performance.now() - t0) / 1000, changed = st.sig !== viewSig(), p = r.settings;
       autoEnd();
       if (changed) { setStatus('The photo or frame changed during the search. Select Find best settings again.'); return; }
-      const keptUsed = pk.cnt.reduce((a, c, i) => a + (pk.keep[i] ? c : 0), 0), dropped = pk.k < pk.job.threads.length;
-      const lines = pk.k === 1 || dropped ? Math.min(AU.LINES[1], Math.max(AU.LINES[0], Math.ceil(keptUsed / 100) * 100)) : pk.L;
-      setRange('nails', pk.job.n); setRange('lines', lines); setRange('dark', pk.job.strength);
-      // threads with under 3% of the lines are left out
-      C.threads = pal.threads.filter((c, i) => pk.keep[i]); C.board = pal.board;
-      const kept = C.threads;
-      $('palette').value = presetName({ board: pal.board, threads: kept }) || 'custom'; renderThreads();
-      const sp = nails.spacingAt(pk.job.n);
-      const note = 'Find best settings tested ' + fmt(tested) + ' combinations in ' + secs.toFixed(1) + ' s and chose ' + fmt(pk.job.n) + ' nails (' +
-        (F.unit === 'in' ? (sp / 25.4).toFixed(2) + ' in' : sp.toFixed(1) + ' mm') + ' apart), ' + fmt(lines) + ' lines, thread strength ' + pk.job.strength + ', and ' +
-        kept.map((c) => dmcLabel(c)).join(', ') + ' on a ' + BOARDS[pal.board].name.toLowerCase() + ' board. You can change any setting and select Make string art again.';
-      window.__stringArt.lastAuto = { secs, tested, pick: { n: pk.job.n, lines, strength: pk.job.strength, threads: kept, tested: pal.threads, board: pal.board, score: pk.score, used: pk.used, de: pk.de, ssim: pk.ssim, detail: pk.detail, ssimC: pk.ssimC }, chroma, palettes: pals.map((p) => p.board + ':' + p.threads.join('+')), bestScore: ch.bestScore, r3: r3.map((r) => ({ job: r.job, ms: r.ms, results: r.results })) };
+      setRange('nails', p.nails); setRange('lines', p.lines); setRange('dark', p.strength);
+      C.threads = p.threads.slice(); C.board = p.board;
+      $('palette').value = presetName({ board: p.board, threads: p.threads }) || 'custom'; renderThreads();
+      const sp = r.spacingMM;
+      const note = 'Find best settings tested ' + fmt(r.tested) + ' combinations in ' + secs.toFixed(1) + ' s and chose ' + fmt(p.nails) + ' nails (' +
+        (F.unit === 'in' ? (sp / 25.4).toFixed(2) + ' in' : sp.toFixed(1) + ' mm') + ' apart), ' + fmt(p.lines) + ' lines, thread strength ' + p.strength + ', and ' +
+        p.threads.map((c) => dmcLabel(c)).join(', ') + ' on a ' + BOARDS[p.board].name.toLowerCase() + ' board. You can change any setting and select Make string art again.';
+      window.__stringArt.lastAuto = { secs, tested: r.tested, workers: NW, stages: r.stages, pick: Object.assign({ score: r.pick.score, de: r.pick.de, dab: r.pick.dab, detail: r.pick.detail }, p), chroma: r.chroma, palettes: r.palettes, bestScore: r.bestScore, first: r.first };
       S.onFinish = () => { $('auto-note').textContent = note; $('auto-note').hidden = false; };
       document.body.dataset.state = 'running';
       start();
@@ -563,7 +549,11 @@
   function renderPNG(max) {
     const R = S.result, [w, h] = fitSize(R.A, max), c = document.createElement('canvas'); c.width = w; c.height = h;
     const ctx = c.getContext('2d');
-    ctx.save(); ctx.scale(w / out.width, h / out.height); paintAll(ctx, out.width, out.height, R); ctx.restore();
+    if (max <= 1200) { paintAll(ctx, w, h, R); return c; }
+    // larger sizes: the 1200 px render scaled up (thread wider than 2 px is not drawn exactly)
+    const [w1, h1] = fitSize(R.A, 1200), t = document.createElement('canvas'); t.width = w1; t.height = h1;
+    paintAll(t.getContext('2d'), w1, h1, R);
+    ctx.imageSmoothingQuality = 'high'; ctx.drawImage(t, 0, 0, w, h);
     return c;
   }
   const NUMBERING = 'Nail 0 is at the middle of the right side; the numbers increase counter-clockwise.';
@@ -697,8 +687,8 @@
   // match score of the current result (see core.js), for testing
   function scoreResult() {
     const R = S.result; if (!R || !R.finished) return null;
-    const [w, h] = SA.workSize(R.A, SA.auto.EVAL), T = SA.target(photoPixels(w, h), w, h, SA.insideMask(R.shape, w, h), R.shape);
-    return SA.score(SA.render(w, h, R.lay, R.threads.map((t) => t.order), R.threads.map((t) => t.count), R.threads.map((t) => t.color), R.board, R.strength), T);
+    return SA.scoreResult({ photo: photoPixels, shape: R.shape, A: R.A, lay: R.lay, orders: R.threads.map((t) => t.order), counts: R.threads.map((t) => t.count),
+      threads: R.threads.map((t) => t.color), board: R.board, strength: R.strength, frameMM: R.frameMM });
   }
   window.__stringArt = { buildGuide, nailOrderText, nailLayout, state: S, frame: F, colors: C, dmc: DMC, nearestDMC, core: SA, scoreResult };
 })();

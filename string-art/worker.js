@@ -10,10 +10,10 @@ self.onmessage = function (e) {
   const m = e.data;
   if (m.type === 'run') run(m);
   else if (m.type === 'init') {
-    ctx = { shape: m.shape, A: m.A, photo: {}, cache: null };
+    ctx = { shape: m.shape, A: m.A, frameMM: m.frameMM || 400, photo: {}, cache: null, solveOpts: m.solveOpts };
     for (const p of m.photos) ctx.photo[p.res] = { d: new Uint8ClampedArray(p.d), w: p.w, h: p.h, inside: SA.insideMask(m.shape, p.w, p.h) };
     const t = ctx.photo[SA.auto.EVAL];
-    ctx.T = SA.target(t.d, t.w, t.h, t.inside, m.shape);
+    ctx.T = SA.target(t.d, t.w, t.h, t.inside, m.shape, { frameMM: ctx.frameMM });
     self.postMessage({ type: 'ready', chroma: ctx.T.chroma });
   } else if (m.type === 'fit') {
     const t = ctx.photo[SA.auto.COARSE];
@@ -34,7 +34,7 @@ function run(m) {
     sent = k; lastPost = performance.now();
   };
   const r = SA.solve(P, maps, m.budgets, m.strength, {
-    penalty: m.penalty, start: m.start,
+    penalty: m.penalty, start: m.start, clip: m.clip,
     onStart: (c, o, lines) => { color = c; order = o; sent = 0; lastPost = performance.now(); self.postMessage({ type: 'lines', color: c, nails: [o[0]], count: 0, budget: lines }); },
     onEnd: (c, k) => { flush(k); self.postMessage({ type: 'colorDone', color: c, count: k }); }
   }, (c, k) => { if (performance.now() - lastPost > 30) flush(k); });
