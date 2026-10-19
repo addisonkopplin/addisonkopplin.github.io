@@ -1,0 +1,337 @@
+{
+ "schema": "dash/1",
+ "area": "status",
+ "title": "Collection status",
+ "as_of": "2026-10-19",
+ "generated": "2026-10-19T09:49:03Z",
+ "method_url": "/data/status/method/",
+ "sources": [
+  {
+   "name": "Workbench data collector (own logs)",
+   "license": "own data"
+  }
+ ],
+ "headline": [
+  {
+   "label": "Campaigns",
+   "value": 18,
+   "unit": "count",
+   "decimals": 0
+  },
+  {
+   "label": "Healthy now",
+   "value": 17,
+   "unit": "count",
+   "decimals": 0,
+   "good": "up"
+  },
+  {
+   "label": "Ran in the last 24 h",
+   "value": 18,
+   "unit": "count",
+   "decimals": 0,
+   "good": "up"
+  },
+  {
+   "label": "Rows collected",
+   "value": 15311650,
+   "unit": "count",
+   "decimals": 0,
+   "good": "up",
+   "change": 42233,
+   "change_label": "vs previous day"
+  }
+ ],
+ "charts": [
+  {
+   "id": "campaigns",
+   "type": "status",
+   "title": "Campaign health",
+   "takeaway": "18 of 18 campaigns ran successfully in the last day, 1 needs attention.",
+   "unit": "count",
+   "decimals": 0,
+   "source": "Own collector logs",
+   "campaigns": [
+    {
+     "name": "Shopify pricing apps",
+     "owner": "Signal",
+     "last_run": "2026-10-19T05:33:00Z",
+     "rows": 4511,
+     "rows_change": 1191,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Chrome Web Store reseller tools",
+     "owner": "Signal",
+     "last_run": "2026-10-19T05:39:37Z",
+     "rows": 1467,
+     "rows_change": 454,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Gumroad budget templates",
+     "owner": "Signal",
+     "last_run": "2026-10-19T05:40:42Z",
+     "rows": 2154,
+     "rows_change": 718,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Google autocomplete",
+     "owner": "Signal",
+     "last_run": "2026-10-19T05:54:07Z",
+     "rows": 9252,
+     "rows_change": 1546,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Google Trends",
+     "owner": "Signal",
+     "last_run": "2026-10-19T09:47:02Z",
+     "rows": 48340,
+     "rows_change": 12425,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "City permits pipeline",
+     "owner": "Ledger",
+     "last_run": "2026-10-19T09:22:44Z",
+     "rows": 236450,
+     "rows_change": 2,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Seattle rental registry",
+     "owner": "Ledger",
+     "last_run": "2026-10-19T09:22:53Z",
+     "rows": 99,
+     "rows_change": 33,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Seattle water taps",
+     "owner": "Ledger",
+     "last_run": "2026-10-19T09:22:57Z",
+     "rows": 1145,
+     "rows_change": 6,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "New business filings",
+     "owner": "Quarry",
+     "last_run": "2026-10-19T09:29:21Z",
+     "rows": 18829,
+     "rows_change": -9,
+     "health": "warn",
+     "note": "Rows fell since previous day"
+    },
+    {
+     "name": "Trade promo prices",
+     "owner": "Quarry",
+     "last_run": "2026-10-19T06:01:38Z",
+     "rows": 1541,
+     "rows_change": 123,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Trade job postings",
+     "owner": "Quarry",
+     "last_run": "2026-10-19T06:07:08Z",
+     "rows": 3059,
+     "rows_change": 978,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Hiring velocity",
+     "owner": "Ticker",
+     "last_run": "2026-10-19T06:10:16Z",
+     "rows": 61853,
+     "rows_change": 20242,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Insider buying clusters",
+     "owner": "Ticker",
+     "last_run": "2026-10-19T06:17:56Z",
+     "rows": 14598294,
+     "rows_change": 0,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Developer tool adoption",
+     "owner": "Ticker",
+     "last_run": "2026-10-19T06:21:10Z",
+     "rows": 152326,
+     "rows_change": 58,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "PortWatch trade",
+     "owner": "Ticker",
+     "last_run": "2026-10-19T06:25:11Z",
+     "rows": 169152,
+     "rows_change": 4464,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Index event calendar",
+     "owner": "Ticker",
+     "last_run": "2026-10-19T09:39:57Z",
+     "rows": 2083,
+     "rows_change": 2,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Country valuations",
+     "owner": "Ticker",
+     "last_run": "2026-10-19T06:25:36Z",
+     "rows": 1008,
+     "rows_change": 0,
+     "health": "ok",
+     "note": "Ran OK"
+    },
+    {
+     "name": "Source validation",
+     "owner": "Gork",
+     "last_run": "2026-10-19T09:47:36Z",
+     "rows": 87,
+     "health": "ok",
+     "note": "Checked against primary sources: 64 pass, 0 fail, 23 unverifiable"
+    }
+   ]
+  },
+  {
+   "id": "rows",
+   "type": "bar",
+   "title": "Rows by campaign",
+   "takeaway": "Insider buying clusters holds the most rows, 95% of the total.",
+   "unit": "count",
+   "decimals": 0,
+   "source": "Own collector data",
+   "bars": [
+    {
+     "label": "Insider buying clusters",
+     "value": 14598294
+    },
+    {
+     "label": "City permits pipeline",
+     "value": 236450
+    },
+    {
+     "label": "PortWatch trade",
+     "value": 169152
+    },
+    {
+     "label": "Developer tool adoption",
+     "value": 152326
+    },
+    {
+     "label": "Hiring velocity",
+     "value": 61853
+    },
+    {
+     "label": "Google Trends",
+     "value": 48340
+    },
+    {
+     "label": "New business filings",
+     "value": 18829
+    },
+    {
+     "label": "Google autocomplete",
+     "value": 9252
+    },
+    {
+     "label": "Shopify pricing apps",
+     "value": 4511
+    },
+    {
+     "label": "Trade job postings",
+     "value": 3059
+    },
+    {
+     "label": "Gumroad budget templates",
+     "value": 2154
+    },
+    {
+     "label": "Index event calendar",
+     "value": 2083
+    },
+    {
+     "label": "Trade promo prices",
+     "value": 1541
+    },
+    {
+     "label": "Chrome Web Store reseller tools",
+     "value": 1467
+    },
+    {
+     "label": "Seattle water taps",
+     "value": 1145
+    },
+    {
+     "label": "Country valuations",
+     "value": 1008
+    },
+    {
+     "label": "Seattle rental registry",
+     "value": 99
+    },
+    {
+     "label": "Source validation",
+     "value": 87
+    }
+   ],
+   "highlight": [
+    "Insider buying clusters"
+   ]
+  },
+  {
+   "id": "rows_total",
+   "type": "line",
+   "title": "Total rows over time",
+   "takeaway": "Total rows rose from 15,233,497 to 15,311,650 since 2026-10-17.",
+   "unit": "count",
+   "decimals": 0,
+   "source": "Own collector data",
+   "series": [
+    {
+     "name": "Total rows",
+     "points": [
+      [
+       "2026-10-17",
+       15233497
+      ],
+      [
+       "2026-10-18",
+       15269330
+      ],
+      [
+       "2026-10-19",
+       15311650
+      ]
+     ]
+    }
+   ],
+   "highlight": "Total rows"
+  }
+ ],
+ "notes": [
+  "Rows count every table in each campaign's cleaned data, so derived tables add to the total."
+ ]
+}
