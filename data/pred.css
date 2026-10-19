@@ -1,0 +1,43 @@
+/* Predictions page (/data/predictions/). Shared dashboard styles are in dash.css. */
+.jump{display:flex;flex-wrap:wrap;column-gap:1.5rem;margin:1.75rem 0 0;padding:.25rem 0;border-top:1px solid var(--rule)}
+.jump a{display:inline-flex;align-items:center;min-height:2.75rem;font-size:.9375rem;font-weight:500;color:var(--ink);text-decoration:none}
+.jump a:hover{color:var(--accent)}
+.pr .take{margin-bottom:1rem}
+.flt{display:flex;flex-wrap:wrap;column-gap:1.25rem;margin:0 0 .5rem}
+.flt button{min-height:2.75rem;padding:0;background:none;border:0;border-bottom:2px solid transparent;color:var(--body);font:500 .9375rem/1 Inter,system-ui,sans-serif;cursor:pointer}
+.flt button[aria-pressed=true]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.gi{margin:1.5rem 0 0}
+.gi[hidden]{display:none}
+.gh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.25rem 1rem;margin:0;padding:0 0 .4rem;border-bottom:1px solid var(--ink);color:var(--ink);font-size:1.0625rem;font-weight:600;letter-spacing:-.01em}
+.gh span{color:var(--mute);font-size:.875rem;font-weight:500;font-variant-numeric:tabular-nums}
+.pl,.ml{list-style:none;margin:0;padding:0}
+.pi-it,.ml li{padding:1rem 0 1.1rem;border-bottom:1px solid var(--rule)}
+.pi-it p,.ml p{margin:0;font-size:.9375rem;line-height:1.5}
+.pi-top{display:grid;grid-template-columns:minmax(0,1fr) 15rem;gap:1rem 2rem;align-items:start}
+.claim{color:var(--ink);font-size:1rem!important;font-weight:550}
+.pi-fig{text-align:right}
+.strip{display:block;width:100%;max-width:15rem;height:22px;margin-left:auto}
+.pi-v{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.pi-c{color:var(--mute);font-size:.8125rem!important}
+.pi-k{margin-top:.6rem!important;color:var(--mute);font-size:.8125rem!important;font-weight:600}
+.mk{margin:.15rem 0 0;padding-left:1.1rem}
+.mk li{margin:.1rem 0;font-size:.9375rem;line-height:1.5}
+.mk li::marker{color:#a0a0a0}
+.mkn{color:var(--ink);font-weight:500}
+.dir{color:var(--accent);font-weight:600;white-space:nowrap}
+.pi{color:var(--mute)}
+.bench{margin-top:.5rem!important;color:var(--body)}
+.bt{margin-top:.5rem!important}
+.bt.rej{color:var(--ink)}
+.pi-m{margin-top:.5rem!important;color:var(--mute);font-size:.8125rem!important;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.pr details{margin-top:.35rem}
+.pr summary{display:inline-flex;align-items:center;min-height:2.75rem;color:var(--accent);font-size:.9375rem;font-weight:500;cursor:pointer}
+.pr details p{max-width:46rem;margin:.25rem 0 .5rem;color:var(--body)}
+.mt{color:var(--ink);font-weight:600}
+.res.hit{color:var(--accent);font-weight:600}
+.res.miss,.res.void{color:var(--ink);font-weight:600}
+@media (max-width:760px){
+ .pi-top{grid-template-columns:1fr}
+ .pi-fig{text-align:left}
+ .strip{margin-left:0}
+}
