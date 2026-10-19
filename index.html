@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workbench: Free Browser Tools and Data Dashboards</title>
+<meta name="description" content="Small free browser tools and public data: a string art generator from your photo, a prices vs. inflation calculator, and dashboards on housing, the economy and markets.">
+<link rel="canonical" href="https://addisonkopplin.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Workbench">
+<meta property="og:title" content="Workbench: Free Browser Tools and Data Dashboards">
+<meta property="og:description" content="Small free browser tools and public data: a string art generator from your photo, a prices vs. inflation calculator, and dashboards on housing, the economy and markets.">
+<meta property="og:url" content="https://addisonkopplin.com/">
+<meta property="og:image" content="https://addisonkopplin.com/images/og-home.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Workbench: a string art portrait, a price chart and a sketch of dashboard charts in black and blue line on white">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Workbench: Free Browser Tools and Data Dashboards">
+<meta name="twitter:description" content="Small free browser tools and public data: a string art generator from your photo, a prices vs. inflation calculator, and dashboards on housing, the economy and markets.">
+<meta name="twitter:image" content="https://addisonkopplin.com/images/og-home.png">
+<meta name="twitter:image:alt" content="Workbench: a string art portrait, a price chart and a sketch of dashboard charts in black and blue line on white">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fonts/Inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:Inter;font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/Inter-latin-var.woff2) format("woff2")}
+:root{--ink:#111;--body:#2b2b2b;--mute:#6b6b6b;--rule:#e4e4e4;--accent:#1f3fbf}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#fff;color:var(--body);font:400 1rem/1.6 Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}
+a{color:var(--ink)}
+.page{max-width:72rem;margin:0 auto;padding:1.75rem 2.5rem 4rem}
+h1{margin:0 0 1.5rem;color:var(--ink);font-weight:650;font-size:1.75rem;line-height:1.1;letter-spacing:-.025em}
+h2{margin:0 0 .75rem;color:var(--ink);font-size:.75rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase}
+section+section{margin-top:2.25rem}
+.grid{list-style:none;margin:0;padding:0;display:grid;gap:1px;background:var(--rule);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.grid li{margin:0;background:#fff}
+.cell{display:flex;flex-direction:column;height:100%;min-height:9.5rem;padding:1.125rem 1.25rem 1.125rem 0;text-decoration:none;color:var(--body)}
+.grid li+li .cell{padding-left:1.25rem}
+.cell h3{margin:0;color:var(--ink);font-size:1.0625rem;font-weight:600;letter-spacing:-.01em}
+.cell:hover h3{color:var(--accent)}
+.cell:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.fig{margin:.6rem 0 0;color:var(--ink);font-size:2rem;font-weight:600;line-height:1.1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;min-height:2.2rem}
+.lab{margin:.3rem 0 0;min-height:2.8em;font-size:.875rem;line-height:1.4;text-wrap:pretty}
+.as{margin:auto 0 0;padding-top:.6rem;color:var(--mute);font-size:.8125rem;font-variant-numeric:tabular-nums;min-height:1.95rem}
+.tool{flex-direction:row;gap:1.25rem;align-items:flex-start}
+.tool div{display:flex;flex-direction:column;flex:1;min-width:0;align-self:stretch}
+.tool img{flex:none;width:6.5rem;height:6.5rem;margin-top:.15rem}
+.grid li.wide{grid-column:1/-1}
+.grid li.wide .cell{padding-left:0;min-height:0}
+@media (max-width:1180px) and (min-width:1024px),(max-width:860px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g4 li:nth-child(odd) .cell{padding-left:0}.g4 li:nth-child(n+3) .cell{padding-top:1.125rem}.g4 li.wide .cell{padding-left:0}}
+@media (max-width:760px){.page{padding:1.25rem 1.375rem 3rem}h1{font-size:1.5rem;margin-bottom:1.25rem}.fig{font-size:1.625rem;min-height:1.8rem}}
+@media (max-width:560px){.g2,.g4{grid-template-columns:1fr}.grid li .cell,.grid li+li .cell{padding-left:0;padding-right:0}.cell{min-height:0}.tool img{width:5rem;height:5rem}}
+</style>
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "WebSite",
+ "name": "Workbench",
+ "url": "https://addisonkopplin.com/",
+ "description": "Small free browser tools and public data: a string art generator from your photo, a prices vs. inflation calculator, and dashboards on housing, the economy and markets.",
+ "inLanguage": "en",
+ "publisher": {
+  "@type": "Organization",
+  "name": "Workbench",
+  "url": "https://addisonkopplin.com/"
+ }
+}
+</script>
+<script src="/site.js" defer></script>
+</head>
+<body>
+<!-- nav:start -->
+<script>document.documentElement.classList.add('js')</script>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="site-bar">
+<a class="site-name" href="/">Workbench</a>
+<button class="site-find" type="button" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K"><span>Search<span class="w"> pages</span></span><span class="k" aria-hidden="true">Ctrl K</span></button>
+<button class="site-menu" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+</div>
+</header>
+<nav class="site-nav" id="site-nav" aria-label="Main">
+<ul>
+<li><a href="/" aria-current="page">Home</a></li>
+</ul>
+<p class="nav-g" id="nav-g1">Tools</p>
+<ul aria-labelledby="nav-g1">
+<li><a href="/string-art/">String Art</a></li>
+</ul>
+<p class="nav-g" id="nav-g2">Data</p>
+<ul aria-labelledby="nav-g2">
+<li><a href="/data/">All dashboards</a></li>
+<li class="nav-sub"><a href="/data/housing/">Housing</a></li>
+<li class="nav-sub"><a href="/data/economy/">Economy</a></li>
+<li class="nav-sub"><a href="/data/prices/">Prices vs. Inflation</a></li>
+<li class="nav-sub"><a href="/data/markets/">Markets</a></li>
+<li class="nav-sub"><a href="/data/predictions/">Predictions</a></li>
+<li class="nav-sub"><a href="/data/status/">Collection status</a></li>
+</ul>
+</nav>
+<!-- nav:end -->
+<div class="page">
+<main id="main">
+<h1>Workbench</h1>
+<section aria-labelledby="h-tools">
+<h2 id="h-tools">Tools</h2>
+<ul class="grid">
+<li><a class="cell tool" href="/string-art/"><div><h3>String Art</h3><p class="lab">Photo to string art: a nail template, the winding order and a thread list.</p><p class="as">Runs in your browser</p></div><img src="/string-art/examples/einstein-art.webp" width="480" height="480" alt="" decoding="async"></a></li>
+</ul>
+</section>
+<section aria-labelledby="h-data">
+<h2 id="h-data">Data</h2>
+<ul class="grid g4">
+<li><a class="cell" href="/data/housing/" data-area="housing"><h3>Housing</h3><p class="fig">&nbsp;</p><p class="lab">&nbsp;</p><p class="as">&nbsp;</p></a></li>
+<li><a class="cell" href="/data/economy/" data-area="economy"><h3>Economy</h3><p class="fig">&nbsp;</p><p class="lab">&nbsp;</p><p class="as">&nbsp;</p></a></li>
+<li><a class="cell" href="/data/markets/" data-area="markets"><h3>Markets</h3><p class="fig">&nbsp;</p><p class="lab">&nbsp;</p><p class="as">&nbsp;</p></a></li>
+<li><a class="cell" href="/data/status/" data-area="status"><h3>Collection status</h3><p class="fig">&nbsp;</p><p class="lab">&nbsp;</p><p class="as">&nbsp;</p></a></li>
+<li class="wide"><a class="cell tool" href="/data/predictions/" data-area="predictions"><div><h3>Predictions</h3><p class="fig">&nbsp;</p><p class="lab">&nbsp;</p><p class="as">&nbsp;</p></div></a></li>
+<li class="wide"><a class="cell tool" href="/data/prices/"><div><h3>Prices vs. Inflation</h3><p class="fig" data-prices>&nbsp;</p><p class="lab">Overall consumer prices, change over 12 months. 32 categories to compare.</p><p class="as" data-prices-asof>&nbsp;</p></div></a></li>
+</ul>
+</section>
+</main>
+</div>
+<script>
+/* Headline figures, read from each dashboard's data.json and from the Prices data. */
+(function () {
+var M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fd(s) { var m = /^(\d{4})-(\d\d)(?:-(\d\d))?/.exec(s || ''); return m ? M[m[2] - 1] + (m[3] ? ' ' + (+m[3]) + ',' : '') + ' ' + m[1] : ''; }
+function n(v, d) { return Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function fmt(v, u, d) {
+  if (typeof v !== 'number' || !isFinite(v)) return '\u2013';
+  d = d === +d ? d : (u === 'count' ? 0 : 1);
+  var s = u === '%' ? n(v, d) + '%' : u === 'pp' ? n(v, d) + ' percentage points' : u === 'x' ? n(v, d) + '\u00d7' : u === '$' ? '$' + n(v, d) : n(v, d);
+  return (v < 0 ? '\u2212' : '') + s;
+}
+function get(u) { return fetch(u, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }); }
+[].forEach.call(document.querySelectorAll('[data-area]'), function (a) {
+  var p = a.querySelectorAll('p');
+  get('/data/' + a.getAttribute('data-area') + '/data.json').then(function (d) {
+    var h = (d.headline || [])[0]; if (!h) throw 0;
+    p[0].textContent = fmt(h.value, h.unit, h.decimals); p[1].textContent = h.label;
+    p[2].textContent = 'Data as of ' + fd(h.as_of || d.as_of);
+  }).catch(function () { p[0].textContent = '\u2013'; p[1].textContent = 'Waiting for its first data export.'; });
+});
+get('/data/prices/data/prices.json').then(function (d) {
+  var s = d.series.filter(function (x) { return x.key === 'all'; })[0], v = s.v, i = v.length - 1;
+  while (i >= 12 && (v[i] == null || v[i - 12] == null)) i--;
+  var c = (v[i] / v[i - 12] - 1) * 100, y = +s.first.slice(0, 4), m = +s.first.slice(5, 7) - 1 + i;
+  document.querySelector('[data-prices]').textContent = (c > 0 ? '+' : '') + fmt(c, '%', 1);
+  document.querySelector('[data-prices-asof]').textContent = 'Data as of ' + M[m % 12] + ' ' + (y + Math.floor(m / 12));
+}).catch(function () {});
+})();
+</script>
+<!-- footer:start -->
+<footer class="site-footer">
+<div class="site-bar">
+<a class="site-name" href="/">Workbench</a>
+<nav class="foot-nav" aria-label="Footer">
+<ul>
+<li><a href="/" aria-current="page">Home</a></li>
+<li><a href="/string-art/">String Art</a></li>
+<li><a href="/data/">All dashboards</a></li>
+<li><a href="/data/housing/">Housing</a></li>
+<li><a href="/data/economy/">Economy</a></li>
+<li><a href="/data/prices/">Prices vs. Inflation</a></li>
+<li><a href="/data/markets/">Markets</a></li>
+<li><a href="/data/predictions/">Predictions</a></li>
+<li><a href="/data/status/">Collection status</a></li>
+</ul>
+</nav>
+</div>
+</footer>
+<!-- footer:end -->
+</body>
+</html>
