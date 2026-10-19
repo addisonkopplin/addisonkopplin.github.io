@@ -1,0 +1,27 @@
+{
+ "id": "starry",
+ "title": "The Starry Night",
+ "photo": "starry.jpg",
+ "crop": {
+  "zoom": 1,
+  "cx": 0.5,
+  "cy": 0.5
+ },
+ "frame": {
+  "shape": "rect",
+  "aspect": "4:3",
+  "w": 600,
+  "h": 450
+ },
+ "nails": 300,
+ "lines": 6000,
+ "threads": [
+  "823",
+  "3839",
+  "966"
+ ],
+ "board": "white",
+ "credit": "The Starry Night, Vincent van Gogh, public domain",
+ "source": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+ "order": 5
+}

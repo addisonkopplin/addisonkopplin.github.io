@@ -1,0 +1,26 @@
+{
+ "id": "wave",
+ "title": "The Great Wave off Kanagawa",
+ "photo": "wave.jpg",
+ "crop": {
+  "zoom": 1,
+  "cx": 0.5,
+  "cy": 0.5
+ },
+ "frame": {
+  "shape": "circle",
+  "w": 400,
+  "h": 400
+ },
+ "nails": 354,
+ "lines": 2500,
+ "threads": [
+  "746",
+  "517",
+  "712"
+ ],
+ "board": "black",
+ "credit": "The Great Wave off Kanagawa, Katsushika Hokusai, public domain",
+ "source": "https://commons.wikimedia.org/wiki/File:Tsunami_by_hokusai_19th_century.jpg",
+ "order": 4
+}

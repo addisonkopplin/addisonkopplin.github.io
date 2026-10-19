@@ -1,0 +1,26 @@
+{
+ "id": "obama",
+ "title": "Barack Obama",
+ "photo": "obama.jpg",
+ "crop": {
+  "zoom": 1,
+  "cx": 0.5,
+  "cy": 0.5
+ },
+ "frame": {
+  "shape": "circle",
+  "w": 400,
+  "h": 400
+ },
+ "nails": 354,
+ "lines": 4000,
+ "threads": [
+  "402",
+  "939",
+  "3856"
+ ],
+ "board": "white",
+ "credit": "Barack Obama, official portrait, Pete Souza, The White House, public domain",
+ "source": "https://commons.wikimedia.org/wiki/File:President_Barack_Obama.jpg",
+ "order": 0
+}

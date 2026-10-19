@@ -1,0 +1,24 @@
+{
+ "id": "einstein",
+ "title": "Albert Einstein",
+ "photo": "einstein.jpg",
+ "crop": {
+  "zoom": 1,
+  "cx": 0.5,
+  "cy": 0.5
+ },
+ "frame": {
+  "shape": "circle",
+  "w": 600,
+  "h": 600
+ },
+ "nails": 468,
+ "lines": 5100,
+ "threads": [
+  "310"
+ ],
+ "board": "white",
+ "credit": "Albert Einstein, Orren Jack Turner, 1947, public domain",
+ "source": "https://commons.wikimedia.org/wiki/File:Albert_Einstein_Head.jpg",
+ "order": 1
+}

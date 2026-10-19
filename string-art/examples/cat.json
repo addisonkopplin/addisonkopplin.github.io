@@ -1,0 +1,26 @@
+{
+ "id": "cat",
+ "title": "Tabby cat",
+ "photo": "cat.jpg",
+ "crop": {
+  "zoom": 1,
+  "cx": 0.5,
+  "cy": 0.5
+ },
+ "frame": {
+  "shape": "circle",
+  "w": 400,
+  "h": 400
+ },
+ "nails": 354,
+ "lines": 3600,
+ "threads": [
+  "939",
+  "728",
+  "3825"
+ ],
+ "board": "white",
+ "credit": "Tabby cat with blue eyes, AdinaVoicu, CC0",
+ "source": "https://commons.wikimedia.org/wiki/File:Tabby_cat_with_blue_eyes-3336579.jpg",
+ "order": 3
+}

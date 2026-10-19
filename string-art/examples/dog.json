@@ -1,0 +1,26 @@
+{
+ "id": "dog",
+ "title": "Labrador retriever",
+ "photo": "dog.jpg",
+ "crop": {
+  "zoom": 1,
+  "cx": 0.5,
+  "cy": 0.5
+ },
+ "frame": {
+  "shape": "circle",
+  "w": 400,
+  "h": 400
+ },
+ "nails": 354,
+ "lines": 5700,
+ "threads": [
+  "3371",
+  "15",
+  "3041"
+ ],
+ "board": "white",
+ "credit": "Portrait of a labrador retriever, Dktue, CC0",
+ "source": "https://commons.wikimedia.org/wiki/File:Portrait_of_a_labrador_retriever.jpg",
+ "order": 2
+}
