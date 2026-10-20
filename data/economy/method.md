@@ -37,7 +37,7 @@ This page explains the numbers on the Economy dashboard: trade and contractor pr
 - **Validation:** monthly totals track the Census Bureau's Business Formation Statistics (business applications). Level correlation since 2016 is 0.85 for Colorado and 0.90 for New York.
 
 ## Advertised home-service prices
-- **Source:** our own aggregate of fixed prices advertised on the public offer pages of locations of three national franchise service chains (HVAC, plumbing, electrical). The latest snapshot is 2026-10-19.
+- **Source:** our own aggregate of fixed prices advertised on the public offer pages of locations of three national franchise service chains (HVAC, plumbing, electrical). The latest snapshot is 2026-10-20.
 - **What is published:** only medians and 10th/90th percentiles across locations, by service, and only where at least 5 locations advertise a fixed price.
   - Rows with fewer than 10 locations are marked "small sample".
   - We publish no individual locations, brands, page text or per-location prices.
