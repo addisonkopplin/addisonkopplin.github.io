@@ -2,8 +2,8 @@
  "schema": "dash/1",
  "area": "status",
  "title": "Collection status",
- "as_of": "2026-10-19",
- "generated": "2026-10-19T09:49:03Z",
+ "as_of": "2026-10-20",
+ "generated": "2026-10-20T06:11:57Z",
  "method_url": "/data/status/method/",
  "sources": [
   {
@@ -27,18 +27,18 @@
   },
   {
    "label": "Ran in the last 24 h",
-   "value": 18,
+   "value": 16,
    "unit": "count",
    "decimals": 0,
    "good": "up"
   },
   {
    "label": "Rows collected",
-   "value": 15311650,
+   "value": 15336153,
    "unit": "count",
    "decimals": 0,
    "good": "up",
-   "change": 42233,
+   "change": 24503,
    "change_label": "vs previous day"
   }
  ],
@@ -47,7 +47,7 @@
    "id": "campaigns",
    "type": "status",
    "title": "Campaign health",
-   "takeaway": "18 of 18 campaigns ran successfully in the last day, 1 needs attention.",
+   "takeaway": "16 of 18 campaigns ran successfully in the last day, 1 needs attention.",
    "unit": "count",
    "decimals": 0,
    "source": "Own collector logs",
@@ -55,9 +55,9 @@
     {
      "name": "Shopify pricing apps",
      "owner": "Signal",
-     "last_run": "2026-10-19T05:33:00Z",
-     "rows": 4511,
-     "rows_change": 1191,
+     "last_run": "2026-10-20T05:24:09Z",
+     "rows": 5711,
+     "rows_change": 1200,
      "health": "ok",
      "note": "Ran OK"
     },
@@ -66,7 +66,7 @@
      "owner": "Signal",
      "last_run": "2026-10-19T05:39:37Z",
      "rows": 1467,
-     "rows_change": 454,
+     "rows_change": 0,
      "health": "ok",
      "note": "Ran OK"
     },
@@ -75,15 +75,15 @@
      "owner": "Signal",
      "last_run": "2026-10-19T05:40:42Z",
      "rows": 2154,
-     "rows_change": 718,
+     "rows_change": 0,
      "health": "ok",
      "note": "Ran OK"
     },
     {
      "name": "Google autocomplete",
      "owner": "Signal",
-     "last_run": "2026-10-19T05:54:07Z",
-     "rows": 9252,
+     "last_run": "2026-10-20T05:37:12Z",
+     "rows": 10798,
      "rows_change": 1546,
      "health": "ok",
      "note": "Ran OK"
@@ -93,24 +93,24 @@
      "owner": "Signal",
      "last_run": "2026-10-19T09:47:02Z",
      "rows": 48340,
-     "rows_change": 12425,
+     "rows_change": 0,
      "health": "ok",
      "note": "Ran OK"
     },
     {
      "name": "City permits pipeline",
      "owner": "Ledger",
-     "last_run": "2026-10-19T09:22:44Z",
-     "rows": 236450,
-     "rows_change": 2,
+     "last_run": "2026-10-20T05:38:07Z",
+     "rows": 236603,
+     "rows_change": 153,
      "health": "ok",
      "note": "Ran OK"
     },
     {
      "name": "Seattle rental registry",
      "owner": "Ledger",
-     "last_run": "2026-10-19T09:22:53Z",
-     "rows": 99,
+     "last_run": "2026-10-20T05:38:19Z",
+     "rows": 132,
      "rows_change": 33,
      "health": "ok",
      "note": "Ran OK"
@@ -118,17 +118,17 @@
     {
      "name": "Seattle water taps",
      "owner": "Ledger",
-     "last_run": "2026-10-19T09:22:57Z",
-     "rows": 1145,
-     "rows_change": 6,
+     "last_run": "2026-10-20T05:38:24Z",
+     "rows": 1152,
+     "rows_change": 7,
      "health": "ok",
      "note": "Ran OK"
     },
     {
      "name": "New business filings",
      "owner": "Quarry",
-     "last_run": "2026-10-19T09:29:21Z",
-     "rows": 18829,
+     "last_run": "2026-10-20T05:44:18Z",
+     "rows": 18820,
      "rows_change": -9,
      "health": "warn",
      "note": "Rows fell since previous day"
@@ -136,34 +136,34 @@
     {
      "name": "Trade promo prices",
      "owner": "Quarry",
-     "last_run": "2026-10-19T06:01:38Z",
-     "rows": 1541,
-     "rows_change": 123,
+     "last_run": "2026-10-20T05:52:56Z",
+     "rows": 1659,
+     "rows_change": 118,
      "health": "ok",
      "note": "Ran OK"
     },
     {
      "name": "Trade job postings",
      "owner": "Quarry",
-     "last_run": "2026-10-19T06:07:08Z",
-     "rows": 3059,
-     "rows_change": 978,
+     "last_run": "2026-10-20T05:58:08Z",
+     "rows": 4246,
+     "rows_change": 1187,
      "health": "ok",
      "note": "Ran OK"
     },
     {
      "name": "Hiring velocity",
      "owner": "Ticker",
-     "last_run": "2026-10-19T06:10:16Z",
-     "rows": 61853,
-     "rows_change": 20242,
+     "last_run": "2026-10-20T06:00:59Z",
+     "rows": 82029,
+     "rows_change": 20176,
      "health": "ok",
      "note": "Ran OK"
     },
     {
      "name": "Insider buying clusters",
      "owner": "Ticker",
-     "last_run": "2026-10-19T06:17:56Z",
+     "last_run": "2026-10-20T06:07:03Z",
      "rows": 14598294,
      "rows_change": 0,
      "health": "ok",
@@ -172,9 +172,9 @@
     {
      "name": "Developer tool adoption",
      "owner": "Ticker",
-     "last_run": "2026-10-19T06:21:10Z",
-     "rows": 152326,
-     "rows_change": 58,
+     "last_run": "2026-10-20T06:10:18Z",
+     "rows": 152418,
+     "rows_change": 92,
      "health": "ok",
      "note": "Ran OK"
     },
@@ -183,7 +183,7 @@
      "owner": "Ticker",
      "last_run": "2026-10-19T06:25:11Z",
      "rows": 169152,
-     "rows_change": 4464,
+     "rows_change": 0,
      "health": "ok",
      "note": "Ran OK"
     },
@@ -192,7 +192,7 @@
      "owner": "Ticker",
      "last_run": "2026-10-19T09:39:57Z",
      "rows": 2083,
-     "rows_change": 2,
+     "rows_change": 0,
      "health": "ok",
      "note": "Ran OK"
     },
@@ -208,7 +208,7 @@
     {
      "name": "Source validation",
      "owner": "Gork",
-     "last_run": "2026-10-19T09:47:36Z",
+     "last_run": "2026-10-20T06:10:34Z",
      "rows": 87,
      "health": "ok",
      "note": "Checked against primary sources: 64 pass, 0 fail, 23 unverifiable"
@@ -230,7 +230,7 @@
     },
     {
      "label": "City permits pipeline",
-     "value": 236450
+     "value": 236603
     },
     {
      "label": "PortWatch trade",
@@ -238,11 +238,11 @@
     },
     {
      "label": "Developer tool adoption",
-     "value": 152326
+     "value": 152418
     },
     {
      "label": "Hiring velocity",
-     "value": 61853
+     "value": 82029
     },
     {
      "label": "Google Trends",
@@ -250,19 +250,19 @@
     },
     {
      "label": "New business filings",
-     "value": 18829
+     "value": 18820
     },
     {
      "label": "Google autocomplete",
-     "value": 9252
+     "value": 10798
     },
     {
      "label": "Shopify pricing apps",
-     "value": 4511
+     "value": 5711
     },
     {
      "label": "Trade job postings",
-     "value": 3059
+     "value": 4246
     },
     {
      "label": "Gumroad budget templates",
@@ -274,7 +274,7 @@
     },
     {
      "label": "Trade promo prices",
-     "value": 1541
+     "value": 1659
     },
     {
      "label": "Chrome Web Store reseller tools",
@@ -282,7 +282,7 @@
     },
     {
      "label": "Seattle water taps",
-     "value": 1145
+     "value": 1152
     },
     {
      "label": "Country valuations",
@@ -290,7 +290,7 @@
     },
     {
      "label": "Seattle rental registry",
-     "value": 99
+     "value": 132
     },
     {
      "label": "Source validation",
@@ -305,7 +305,7 @@
    "id": "rows_total",
    "type": "line",
    "title": "Total rows over time",
-   "takeaway": "Total rows rose from 15,233,497 to 15,311,650 since 2026-10-17.",
+   "takeaway": "Total rows rose from 15,233,497 to 15,336,153 since 2026-10-17.",
    "unit": "count",
    "decimals": 0,
    "source": "Own collector data",
@@ -324,6 +324,10 @@
       [
        "2026-10-19",
        15311650
+      ],
+      [
+       "2026-10-20",
+       15336153
       ]
      ]
     }
