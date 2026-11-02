@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1f2a44">
+<title>Guess the Year</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head><body>
+<header>
+  <h1>Guess the Year</h1>
+  <nav>
+    <button data-view="play" class="on">Play</button>
+    <button data-view="timeline">Timeline</button>
+    <button data-view="stats">Stats</button>
+    <button data-view="filters">Filters</button>
+    <button data-view="credits">Credits</button>
+  </nav>
+</header>
+<main>
+  <section id="play" class="view">
+    <div id="filterNote" class="note"></div>
+    <article id="card" class="card"></article>
+  </section>
+  <section id="timeline" class="view" hidden></section>
+  <section id="stats" class="view" hidden></section>
+  <section id="credits" class="view" hidden></section>
+  <section id="filters" class="view" hidden>
+    <h2>Region</h2><div id="fRegion" class="chips"></div>
+    <h2>Category</h2><div id="fCat" class="chips"></div>
+    <h2>Timeframe</h2><div id="fEra" class="chips"></div>
+    <div class="range"><label>From <input id="fFrom" type="text" inputmode="text" placeholder="e.g. 500 BC"></label>
+      <label>To <input id="fTo" type="text" inputmode="text" placeholder="e.g. 1900"></label></div>
+    <h2>Importance</h2>
+    <div id="fTier" class="chips"></div>
+    <p class="hint">Leave a group empty to include everything. With "Auto", the game starts with major events (tier 1) and unlocks more specific ones as your scores improve.</p>
+    <p id="fCount" class="hint"></p>
+    <button id="fReset" class="secondary">Clear filters</button>
+    <button id="resetAll" class="danger">Reset all progress</button>
+  </section>
+</main>
+<script src="data/events.js"></script>
+<script src="app.js"></script>
+</body></html>
